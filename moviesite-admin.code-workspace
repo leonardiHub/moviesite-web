@@ -1,0 +1,68 @@
+{
+  "folders": [
+    {
+      "name": "Root",
+      "path": "."
+    },
+    {
+      "name": "Admin Frontend",
+      "path": "./apps/admin"
+    },
+    {
+      "name": "API Backend", 
+      "path": "./apps/api"
+    },
+    {
+      "name": "UI Package",
+      "path": "./packages/ui"
+    },
+    {
+      "name": "Config Package",
+      "path": "./packages/config"
+    }
+  ],
+  "settings": {
+    "css.validate": false,
+    "less.validate": false,
+    "scss.validate": false,
+    "postcss.validate": false,
+    "files.associations": {
+      "*.css": "tailwindcss"
+    },
+    "emmet.includeLanguages": {
+      "javascript": "javascriptreact",
+      "typescript": "typescriptreact"
+    },
+    "tailwindCSS.includeLanguages": {
+      "javascript": "javascript",
+      "html": "HTML",
+      "css": "css",
+      "postcss": "css"
+    },
+    "tailwindCSS.experimental.classRegex": [
+      "class[Name]*\\s*[:=]\\s*[\"'`]([^\"'`]*)[\"'`]",
+      "className\\s*[:=]\\s*[\"'`]([^\"'`]*)[\"'`]"
+    ],
+    "tailwindCSS.validate": true,
+    "editor.quickSuggestions": {
+      "strings": true
+    },
+    "css.customData": [
+      ".vscode/css_custom_data.json"
+    ],
+    "typescript.preferences.includePackageJsonAutoImports": "auto",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "eslint.workingDirectories": [
+      "./apps/admin",
+      "./apps/api"
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "bradlc.vscode-tailwindcss",
+      "esbenp.prettier-vscode", 
+      "ms-vscode.vscode-typescript-next",
+      "cpylua.language-postcss"
+    ]
+  }
+}

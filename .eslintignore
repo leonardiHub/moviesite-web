@@ -1,0 +1,12 @@
+node_modules/
+.next/
+dist/
+build/
+out/
+coverage/
+*.d.ts
+*.min.js
+*.bundle.js
+public/
+.vscode/
+.idea/

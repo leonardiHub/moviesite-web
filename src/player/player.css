@@ -1,0 +1,543 @@
+:root {
+  --brand-primary: #e50914;
+  --brand-accent: #ff3341;
+  --brand-on-primary: #fff;
+
+  --player-bg: #0a0c12;
+  --ctrl-bg: rgba(0,0,0,.55);
+  --ctrl-bg-hover: rgba(0,0,0,.7);
+  --rail-bg: rgba(255,255,255,.18);
+  --buffer-bg: rgba(255,255,255,.28);
+  --played-bg: var(--brand-primary);
+  --thumb-bg: #fff;
+
+  --radius: 10px;
+  --tap-size: 44px;
+}
+
+.player {
+  position: relative;
+  background: #000;
+  color: #fff;
+  user-select: none;
+  outline: none;
+  --ease: cubic-bezier(.2,.6,.2,1);
+  width: 100%;
+  height: 100%;
+  font-family: 'Noto Sans Thai', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.player__stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.player__stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.player__controls {
+  position: absolute;
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.35) 40%, rgba(0,0,0,.6) 100%);
+  transition: opacity .25s var(--ease), transform .25s var(--ease);
+  pointer-events: auto;
+}
+
+.player.is-idle .player__controls { 
+  opacity: 0; 
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.player.is-paused .player__controls,
+.player.is-error .player__controls,
+.player.is-waiting .player__controls { 
+  opacity: 1; 
+  transform: none; 
+  pointer-events: auto; 
+}
+
+/* 进度条 */
+.progress {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--rail-bg);
+  overflow: hidden;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.progress:hover {
+  height: 8px;
+  transition: height 0.15s ease;
+}
+
+.progress__buffer {
+  position: absolute; 
+  left: 0; 
+  top: 0; 
+  bottom: 0;
+  background: var(--buffer-bg);
+  transition: width .15s linear;
+}
+
+.progress__played {
+  position: absolute; 
+  left: 0; 
+  top: 0; 
+  bottom: 0;
+  background: var(--played-bg);
+  transition: width .1s linear;
+}
+
+.progress__thumb {
+  position: absolute; 
+  top: 50%;
+  width: 12px; 
+  height: 12px;
+  border-radius: 999px;
+  background: var(--thumb-bg);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.3);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.progress:hover .progress__thumb {
+  opacity: 1;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex; 
+  align-items: center; 
+  gap: 10px;
+  background: var(--ctrl-bg);
+  padding: 6px 8px; 
+  border-radius: var(--radius);
+  backdrop-filter: blur(6px);
+}
+
+.player__btn {
+  min-width: var(--tap-size); 
+  height: var(--tap-size);
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  background: transparent; 
+  border: 0; 
+  color: #fff; 
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.player__btn:hover { 
+  background: var(--ctrl-bg-hover); 
+  transform: scale(1.05);
+}
+
+.player__btn:active {
+  transform: scale(0.95);
+}
+
+.player__btn--primary {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  color: var(--brand-on-primary);
+  padding: 0 16px; 
+  height: 40px; 
+  border-radius: 10px; 
+  font-weight: 700;
+  min-width: auto;
+}
+
+.player__btn--primary:hover {
+  background: linear-gradient(135deg, var(--brand-accent), var(--brand-primary));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(229, 9, 20, 0.4);
+}
+
+/* 时间显示 */
+.time { 
+  min-width: 90px; 
+  opacity: .9; 
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 音量控制 */
+.volume { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 6px; 
+}
+
+.volume input[type="range"] { 
+  width: 120px; 
+  accent-color: var(--brand-primary);
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rail-bg);
+  outline: none;
+}
+
+.volume input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.volume input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* 选择框 */
+.select {
+  height: 36px; 
+  padding: 0 8px; 
+  border-radius: 8px; 
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(0,0,0,.3); 
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+}
+
+/* Loading动画 */
+.player__loading {
+  position: absolute; 
+  inset: 0; 
+  display: grid; 
+  place-items: center;
+  background: radial-gradient(transparent, rgba(0,0,0,.35));
+  z-index: 5;
+}
+
+.loading-spinner {
+  width: 38px; 
+  height: 38px; 
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.25);
+  border-top-color: var(--brand-primary);
+  animation: spin .9s linear infinite;
+}
+
+@keyframes spin { 
+  to { transform: rotate(360deg); } 
+}
+
+/* 错误提示 */
+.player__error {
+  position: absolute; 
+  inset: 0; 
+  display: grid; 
+  place-items: center;
+  text-align: center; 
+  padding: 24px;
+  background: radial-gradient(transparent, rgba(0,0,0,.4));
+  z-index: 10;
+}
+
+.player__error__title { 
+  font-weight: 800; 
+  font-size: 18px; 
+  margin-bottom: 6px; 
+  color: #fff;
+}
+
+.player__error__msg { 
+  opacity: .85; 
+  margin-bottom: 12px; 
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+}
+
+/* 大播放按钮 */
+.player__bigplay {
+  position: absolute; 
+  left: 50%; 
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px; 
+  height: 72px; 
+  border-radius: 50%;
+  border: 0; 
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+  box-shadow: 0 10px 26px rgba(229,9,20,.45), inset 0 1px 0 rgba(255,255,255,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 15;
+}
+
+.player__bigplay:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 15px 35px rgba(229,9,20,.6), inset 0 1px 0 rgba(255,255,255,.3);
+}
+
+.player__bigplay .play-icon {
+  color: var(--brand-on-primary); 
+  font-size: 26px; 
+  font-weight: 900;
+  margin-left: 3px; /* 视觉居中调整 */
+}
+
+/* Overlay 容器 */
+.player__overlays { 
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.player__overlays .overlay { 
+  position: absolute;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.overlay--tr { top: 12px; right: 12px; }
+.overlay--tl { top: 12px; left: 12px; }
+.overlay--br { bottom: 12px; right: 12px; }
+.overlay--bl { bottom: 12px; left: 12px; }
+.overlay--center { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+
+.overlay img { 
+  max-width: 180px; 
+  max-height: 120px; 
+  border-radius: 8px; 
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  transition: transform 0.2s ease;
+}
+
+.overlay:hover img {
+  transform: scale(1.05);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .player__controls { 
+    padding: 8px; 
+    gap: 8px; 
+  }
+  
+  .toolbar { 
+    gap: 6px; 
+    flex-wrap: wrap;
+  }
+  
+  .player__btn { 
+    min-width: 40px; 
+    height: 40px; 
+    font-size: 14px;
+  }
+  
+  .volume {
+    order: 10; /* 音量控制移到下一行 */
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  
+  .volume input[type="range"] { 
+    width: 150px; 
+  }
+  
+  .overlay img { 
+    max-width: 140px; 
+    max-height: 90px; 
+  }
+  
+  .time {
+    font-size: 12px;
+    min-width: 80px;
+  }
+  
+  .select {
+    height: 32px;
+    font-size: 12px;
+    padding: 0 6px;
+  }
+
+  /* 移动端大播放按钮 */
+  .player__bigplay {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .player__bigplay .play-icon {
+    font-size: 22px;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  .toolbar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .toolbar > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .time {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* 减少动效模式 */
+@media (prefers-reduced-motion: reduce) {
+  .player__controls,
+  .progress__buffer, 
+  .progress__played,
+  .player__btn,
+  .player__bigplay,
+  .overlay img { 
+    transition: none !important; 
+  }
+  
+  .loading-spinner {
+    animation: none !important;
+    border-top-color: rgba(255,255,255,.5);
+  }
+}
+
+/* 焦点可见性 */
+.player:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.player__btn:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .player__controls {
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,.8) 40%, rgba(0,0,0,.9) 100%);
+  }
+  
+  .progress__played {
+    background: #fff;
+  }
+  
+  .player__btn {
+    border: 1px solid rgba(255,255,255,.3);
+  }
+}
+
+/* 进度条拖拽状态 */
+.progress.is-scrubbing {
+  cursor: grabbing;
+}
+
+.progress.is-scrubbing .progress__thumb {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* 工具提示 */
+.player__btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-bottom: 4px;
+  z-index: 20;
+}
+
+/* 全屏状态 */
+.player:fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+
+.player:fullscreen .player__stage {
+  height: 100vh;
+}
+
+/* 动画性能优化 */
+.player__controls,
+.progress__buffer,
+.progress__played,
+.player__btn {
+  will-change: auto;
+}
+
+.player.is-idle .player__controls {
+  will-change: opacity, transform;
+}
+
+/* 触摸友好的最小点击区域 */
+@media (pointer: coarse) {
+  .player__btn {
+    min-width: 48px;
+    height: 48px;
+  }
+  
+  .progress {
+    height: 12px;
+    padding: 6px 0;
+    margin: -6px 0;
+  }
+  
+  .progress__thumb {
+    width: 16px;
+    height: 16px;
+  }
+}
