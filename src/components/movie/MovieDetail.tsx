@@ -1,32 +1,38 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useMovieDetail, usePlayAuth, useBrandConfig } from '../../hooks/useMovies';
-import Loading from '../common/Loading';
-import { ErrorFallback } from '../common/ErrorBoundary';
-import StartPlayButton from '../common/StartPlayButton';
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  useMovieDetail,
+  usePlayAuth,
+  useBrandConfig,
+} from "../../hooks/useMovies";
+import Loading from "../common/Loading";
+import { ErrorFallback } from "../common/ErrorBoundary";
+import StartPlayButton from "../common/StartPlayButton";
 
 const MovieDetail: React.FC = () => {
   const { movieId } = useParams<{ movieId: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'cast' | 'related'>('overview');
+  const [activeTab, setActiveTab] = useState<"overview" | "cast" | "related">(
+    "overview"
+  );
 
   // Fetch movie data using the API
-  const { 
-    data: movie, 
-    isLoading: movieLoading, 
+  const {
+    data: movie,
+    isLoading: movieLoading,
     error: movieError,
-    refetch: refetchMovie
-  } = useMovieDetail(movieId || '');
+    refetch: refetchMovie,
+  } = useMovieDetail(movieId || "");
 
   // Fetch brand config for styling
   const { data: brandConfig } = useBrandConfig();
 
   // Fetch play authorization (disabled by default)
-  const { 
+  const {
     data: playAuth,
     refetch: fetchPlayAuth,
-    isLoading: playLoading
-  } = usePlayAuth(movieId || '');
+    isLoading: playLoading,
+  } = usePlayAuth(movieId || "");
 
   // Handle play button click
   const handlePlayClick = async () => {
@@ -54,19 +60,29 @@ const MovieDetail: React.FC = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {brandConfig?.logo?.light && (
-              <img 
-                src={brandConfig.logo.light} 
+              <img
+                src={brandConfig.logo.light}
                 alt={brandConfig.name}
                 className="h-8"
               />
             )}
-            <span className="text-xl font-bold">{brandConfig?.name || 'EZ Movie'}</span>
+            <span className="text-xl font-bold">
+              {brandConfig?.name || "EZ Movie"}
+            </span>
           </div>
           <nav className="hidden md:flex space-x-6">
-            <a href="/" className="hover:text-red-500">หน้าหลัก</a>
-            <a href="/หนังฝรั่ง" className="hover:text-red-500">หนังฝรั่ง</a>
-            <a href="#" className="hover:text-red-500">ซีรีส์</a>
-            <a href="#" className="hover:text-red-500">อนิเมะ</a>
+            <a href="/" className="hover:text-red-500">
+              หน้าหลัก
+            </a>
+            <a href="/หนังฝรั่ง" className="hover:text-red-500">
+              หนังฝรั่ง
+            </a>
+            <a href="#" className="hover:text-red-500">
+              ซีรีส์
+            </a>
+            <a href="#" className="hover:text-red-500">
+              อนิเมะ
+            </a>
           </nav>
         </div>
       </header>
@@ -101,7 +117,7 @@ const MovieDetail: React.FC = () => {
                     disabled={playLoading}
                     className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors disabled:opacity-50"
                   >
-                    {playLoading ? 'กำลังโหลด...' : '▶️ ดูหนัง'}
+                    {playLoading ? "กำลังโหลด..." : "▶️ ดูหนัง"}
                   </button>
                 </div>
               </div>
@@ -112,7 +128,7 @@ const MovieDetail: React.FC = () => {
               <h1 className="text-4xl md:text-6xl font-bold mb-4">
                 {movie.title}
               </h1>
-              
+
               {movie.originalTitle && movie.originalTitle !== movie.title && (
                 <p className="text-xl text-gray-400 mb-4">
                   {movie.originalTitle}
@@ -169,7 +185,7 @@ const MovieDetail: React.FC = () => {
                   disabled={playLoading}
                   className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors disabled:opacity-50"
                 >
-                  {playLoading ? 'กำลังโหลด...' : '▶️ ดูหนังตอนนี้'}
+                  {playLoading ? "กำลังโหลด..." : "▶️ ดูหนังตอนนี้"}
                 </button>
                 <button className="bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
                   ❤️ เพิ่มในรายการโปรด
@@ -188,17 +204,17 @@ const MovieDetail: React.FC = () => {
         <div className="border-b border-gray-700 mb-8">
           <nav className="flex space-x-8">
             {[
-              { id: 'overview', label: 'ภาพรวม' },
-              { id: 'cast', label: 'นักแสดง' },
-              { id: 'related', label: 'หนังที่เกี่ยวข้อง' }
-            ].map(tab => (
+              { id: "overview", label: "ภาพรวม" },
+              { id: "cast", label: "นักแสดง" },
+              { id: "related", label: "หนังที่เกี่ยวข้อง" },
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-red-500 text-red-500'
-                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                    ? "border-red-500 text-red-500"
+                    : "border-transparent text-gray-400 hover:text-gray-300"
                 }`}
               >
                 {tab.label}
@@ -209,22 +225,18 @@ const MovieDetail: React.FC = () => {
 
         {/* Tab Content */}
         <div className="min-h-[400px]">
-          {activeTab === 'overview' && (
+          {activeTab === "overview" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Additional Details */}
               <div>
-                <h3 className="text-xl font-semibold mb-4">รายละเอียดเพิ่มเติม</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                  รายละเอียดเพิ่มเติม
+                </h3>
                 <div className="space-y-3">
-                  {movie.languages && movie.languages.length > 0 && (
-                    <div>
-                      <span className="text-gray-400">ภาษา:</span>
-                      <span className="ml-2">{movie.languages.join(', ')}</span>
-                    </div>
-                  )}
                   {movie.countries && movie.countries.length > 0 && (
                     <div>
                       <span className="text-gray-400">ประเทศ:</span>
-                      <span className="ml-2">{movie.countries.join(', ')}</span>
+                      <span className="ml-2">{movie.countries.join(", ")}</span>
                     </div>
                   )}
                   {movie.status && (
@@ -255,14 +267,16 @@ const MovieDetail: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'cast' && (
+          {activeTab === "cast" && (
             <div>
               <h3 className="text-xl font-semibold mb-6">นักแสดงและทีมงาน</h3>
-              
+
               {/* Cast */}
               {movie.cast && movie.cast.length > 0 && (
                 <div className="mb-8">
-                  <h4 className="text-lg font-medium mb-4 text-gray-300">นักแสดง</h4>
+                  <h4 className="text-lg font-medium mb-4 text-gray-300">
+                    นักแสดง
+                  </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {movie.cast.map((person: any) => (
                       <div key={person.id} className="text-center">
@@ -270,7 +284,9 @@ const MovieDetail: React.FC = () => {
                           <span className="text-2xl">👤</span>
                         </div>
                         <p className="font-medium text-sm">{person.name}</p>
-                        <p className="text-xs text-gray-400">{person.character}</p>
+                        <p className="text-xs text-gray-400">
+                          {person.character}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -280,7 +296,9 @@ const MovieDetail: React.FC = () => {
               {/* Crew */}
               {movie.crew && movie.crew.length > 0 && (
                 <div>
-                  <h4 className="text-lg font-medium mb-4 text-gray-300">ทีมงาน</h4>
+                  <h4 className="text-lg font-medium mb-4 text-gray-300">
+                    ทีมงาน
+                  </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {movie.crew.map((person: any) => (
                       <div key={person.id} className="text-center">
@@ -297,10 +315,10 @@ const MovieDetail: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'related' && (
+          {activeTab === "related" && (
             <div>
               <h3 className="text-xl font-semibold mb-6">หนังที่เกี่ยวข้อง</h3>
-              
+
               {movie.related && movie.related.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {movie.related.map((relatedMovie: any) => (
@@ -311,7 +329,7 @@ const MovieDetail: React.FC = () => {
                           alt={relatedMovie.title}
                           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                        
+
                         {/* Overlay with Play Button */}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center">
                           <StartPlayButton movieId={relatedMovie.id} />
@@ -330,14 +348,18 @@ const MovieDetail: React.FC = () => {
                         </h4>
                         <div className="flex items-center justify-between text-xs text-gray-400">
                           <span>{relatedMovie.year}</span>
-                          <span className="text-red-400">⭐ {relatedMovie.rating}</span>
+                          <span className="text-red-400">
+                            ⭐ {relatedMovie.rating}
+                          </span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 text-center py-8">ไม่มีหนังที่เกี่ยวข้อง</p>
+                <p className="text-gray-400 text-center py-8">
+                  ไม่มีหนังที่เกี่ยวข้อง
+                </p>
               )}
             </div>
           )}
@@ -347,4 +369,4 @@ const MovieDetail: React.FC = () => {
   );
 };
 
-export default MovieDetail; 
+export default MovieDetail;

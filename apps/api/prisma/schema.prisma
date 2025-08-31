@@ -22,9 +22,11 @@ model Movie {
   year           Int?
   runtime        Int?     // minutes
   ageRating      String?  @map("age_rating")
-  languages      String[] @default([])
-  countries      String[] @default([])
+
   status         String   @default("draft") // draft, published, archived
+  rating         Float?   // Rating from 0-10
+  director       String?  // Director name
+  cast           String[] @default([]) // Cast members
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -39,6 +41,7 @@ model Movie {
   userHistories  UserHistory[]
   userFavorites  UserFavorite[]
   reports        Report[]
+  countries      MovieCountry[]
 
   @@map("movies")
 }
@@ -101,8 +104,12 @@ model Episode {
 }
 
 model Genre {
-  id   String @id @default(cuid())
-  name String @unique
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   movies MovieGenre[]
@@ -134,8 +141,12 @@ model SeriesGenre {
 }
 
 model Tag {
-  id   String @id @default(cuid())
-  name String @unique
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   movies MovieTag[]
@@ -166,10 +177,47 @@ model SeriesTag {
   @@map("series_tags")
 }
 
+model Country {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique // ISO 3166-1 alpha-2 code
+  nativeName  String?  @map("native_name")
+  flag        String?  // Flag emoji
+  flagUrl     String?  @map("flag_url")
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  movies MovieCountry[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("countries")
+}
+
+
+
+model MovieCountry {
+  movieId   String @map("movie_id")
+  countryId String @map("country_id")
+
+  movie   Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, countryId])
+  @@map("movie_countries")
+}
+
 model Person {
-  id     String  @id @default(cuid())
-  name   String
-  avatar String?
+  id          String   @id @default(cuid())
+  name        String
+  avatar      String?
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   credits Credit[]
@@ -377,6 +425,7 @@ model Report {
 
 model AdminUser {
   id             String    @id @default(cuid())
+  username       String    @unique
   email          String    @unique
   name           String
   passwordHash   String    @map("password_hash")

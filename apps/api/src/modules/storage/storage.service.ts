@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as AWS from 'aws-sdk';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as AWS from "aws-sdk";
 
 @Injectable()
 export class StorageService {
@@ -9,14 +9,14 @@ export class StorageService {
   private readonly logger = new Logger(StorageService.name);
 
   constructor(private configService: ConfigService) {
-    this.bucket = this.configService.get('AWS_S3_BUCKET', 'moviesite-media');
-    
+    this.bucket = this.configService.get("AWS_S3_BUCKET", "moviesite-media");
+
     this.s3 = new AWS.S3({
-      accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
-      region: this.configService.get('AWS_REGION', 'us-east-1'),
-      endpoint: this.configService.get('AWS_S3_ENDPOINT'),
-      s3ForcePathStyle: !!this.configService.get('AWS_S3_ENDPOINT'),
+      accessKeyId: this.configService.get("AWS_ACCESS_KEY_ID"),
+      secretAccessKey: this.configService.get("AWS_SECRET_ACCESS_KEY"),
+      region: this.configService.get("AWS_REGION", "us-east-1"),
+      endpoint: this.configService.get("AWS_S3_ENDPOINT"),
+      s3ForcePathStyle: !!this.configService.get("AWS_S3_ENDPOINT"),
     });
   }
 
@@ -32,15 +32,15 @@ export class StorageService {
       Expires: expiresIn,
       ContentType: contentType,
       Conditions: [
-        ['content-length-range', 0, 100 * 1024 * 1024], // Max 100MB
-        ['starts-with', '$Content-Type', contentType.split('/')[0] + '/'],
+        ["content-length-range", 0, 100 * 1024 * 1024], // Max 100MB
+        ["starts-with", "$Content-Type", contentType.split("/")[0] + "/"],
       ],
     };
 
     return new Promise((resolve, reject) => {
       this.s3.createPresignedPost(params, (err, data) => {
         if (err) {
-          this.logger.error('Error generating presigned URL:', err);
+          this.logger.error("Error generating presigned URL:", err);
           reject(err);
         } else {
           resolve({
@@ -53,14 +53,66 @@ export class StorageService {
   }
 
   // Generate presigned URL for downloads
-  async generatePresignedDownloadUrl(key: string, expiresIn: number = 3600): Promise<string> {
+  async generatePresignedDownloadUrl(
+    key: string,
+    expiresIn: number = 3600
+  ): Promise<string> {
     const params = {
       Bucket: this.bucket,
       Key: key,
       Expires: expiresIn,
     };
 
-    return this.s3.getSignedUrlPromise('getObject', params);
+    return this.s3.getSignedUrlPromise("getObject", params);
+  }
+
+  // Get file stream for direct serving
+  async getFileStream(key: string): Promise<NodeJS.ReadableStream> {
+    const params = {
+      Bucket: this.bucket,
+      Key: key,
+    };
+
+    const response = await this.s3.getObject(params).promise();
+
+    if (!response.Body) {
+      throw new Error("File body is empty");
+    }
+
+    // Convert Buffer to ReadableStream
+    const { Readable } = require("stream");
+    const stream = new Readable();
+    stream.push(response.Body);
+    stream.push(null);
+
+    return stream;
+  }
+
+  // Get file stream with metadata for direct serving
+  async getFileStreamWithMetadata(
+    key: string
+  ): Promise<{ stream: NodeJS.ReadableStream; contentType: string }> {
+    const params = {
+      Bucket: this.bucket,
+      Key: key,
+    };
+
+    const response = await this.s3.getObject(params).promise();
+
+    if (!response.Body) {
+      throw new Error("File body is empty");
+    }
+
+    // Convert Buffer to ReadableStream
+    const { Readable } = require("stream");
+    const stream = new Readable();
+    stream.push(response.Body);
+    stream.push(null);
+
+    return {
+      stream,
+      contentType: response.ContentType || "image/jpeg",
+    };
   }
 
   // Upload file directly (for server-side uploads)
@@ -116,7 +168,7 @@ export class StorageService {
     const params = {
       Bucket: this.bucket,
       Delete: {
-        Objects: keys.map(key => ({ Key: key })),
+        Objects: keys.map((key) => ({ Key: key })),
         Quiet: true,
       },
     };
@@ -151,7 +203,11 @@ export class StorageService {
       await this.getFileMetadata(key);
       return true;
     } catch (error) {
-      if (error instanceof Error && 'statusCode' in error && (error as any).statusCode === 404) {
+      if (
+        error instanceof Error &&
+        "statusCode" in error &&
+        (error as any).statusCode === 404
+      ) {
         return false;
       }
       throw error;
@@ -173,29 +229,33 @@ export class StorageService {
   }
 
   // Generate optimized file paths
-  generatePath(type: 'poster' | 'backdrop' | 'avatar' | 'logo' | 'sponsor' | 'subtitle', filename: string): string {
+  generatePath(
+    type: "poster" | "backdrop" | "avatar" | "logo" | "sponsor" | "subtitle",
+    filename: string
+  ): string {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 8);
-    const extension = filename.split('.').pop();
-    
+    const extension = filename.split(".").pop();
+
     return `${type}s/${timestamp}-${random}.${extension}`;
   }
 
   // Generate thumbnail path
   generateThumbnailPath(originalPath: string, size: string): string {
-    const parts = originalPath.split('/');
+    const parts = originalPath.split("/");
     const filename = parts.pop();
-    const nameWithoutExt = filename?.split('.').slice(0, -1).join('.') || 'file';
-    const ext = filename?.split('.').pop() || '';
-    
-    return `${parts.join('/')}/thumbs/${nameWithoutExt}_${size}.${ext}`;
+    const nameWithoutExt =
+      filename?.split(".").slice(0, -1).join(".") || "file";
+    const ext = filename?.split(".").pop() || "";
+
+    return `${parts.join("/")}/thumbs/${nameWithoutExt}_${size}.${ext}`;
   }
 
   // Get public URL for a file
   getPublicUrl(key: string): string {
-    const endpoint = this.configService.get('AWS_S3_ENDPOINT');
-    const region = this.configService.get('AWS_REGION', 'us-east-1');
-    
+    const endpoint = this.configService.get("AWS_S3_ENDPOINT");
+    const region = this.configService.get("AWS_REGION", "us-east-1");
+
     if (endpoint) {
       // Custom endpoint (like DigitalOcean Spaces)
       return `${endpoint}/${this.bucket}/${key}`;
@@ -206,13 +266,15 @@ export class StorageService {
   }
 
   // Batch operations
-  async uploadMultipleFiles(files: Array<{
-    key: string;
-    buffer: Buffer;
-    contentType: string;
-    metadata?: Record<string, string>;
-  }>): Promise<AWS.S3.ManagedUpload.SendData[]> {
-    const uploads = files.map(file => 
+  async uploadMultipleFiles(
+    files: Array<{
+      key: string;
+      buffer: Buffer;
+      contentType: string;
+      metadata?: Record<string, string>;
+    }>
+  ): Promise<AWS.S3.ManagedUpload.SendData[]> {
+    const uploads = files.map((file) =>
       this.uploadFile(file.key, file.buffer, file.contentType, file.metadata)
     );
 
@@ -226,7 +288,7 @@ export class StorageService {
   ): Promise<string[]> {
     // This would integrate with an image processing service
     // For now, return the paths where thumbnails would be stored
-    return sizes.map(size => 
+    return sizes.map((size) =>
       this.generateThumbnailPath(originalKey, `${size.width}x${size.height}`)
     );
   }
@@ -271,14 +333,14 @@ export class StorageService {
       };
 
       const response = await this.s3.listObjectsV2(listParams).promise();
-      
+
       if (response.Contents) {
-        const oldFiles = response.Contents.filter(obj => 
-          obj.LastModified && obj.LastModified < cutoffDate
+        const oldFiles = response.Contents.filter(
+          (obj) => obj.LastModified && obj.LastModified < cutoffDate
         );
 
         if (oldFiles.length > 0) {
-          const keysToDelete = oldFiles.map(obj => obj.Key!);
+          const keysToDelete = oldFiles.map((obj) => obj.Key!);
           await this.deleteFiles(keysToDelete);
           deletedCount += keysToDelete.length;
         }

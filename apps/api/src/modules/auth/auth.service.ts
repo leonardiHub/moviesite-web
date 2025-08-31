@@ -1,13 +1,23 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcrypt";
 
-import { PrismaService } from '../prisma/prisma.service';
-import { RedisService } from '../redis/redis.service';
-import { AuditService } from './audit.service';
-import { TwoFactorService } from './two-factor.service';
-import { CreateAdminUserDto, LoginDto, ChangePasswordDto, ResetPasswordDto } from './dto';
+import { PrismaService } from "../prisma/prisma.service";
+import { RedisService } from "../redis/redis.service";
+import { AuditService } from "./audit.service";
+import { TwoFactorService } from "./two-factor.service";
+import {
+  CreateAdminUserDto,
+  LoginDto,
+  ChangePasswordDto,
+  ResetPasswordDto,
+} from "./dto";
 
 @Injectable()
 export class AuthService {
@@ -17,12 +27,12 @@ export class AuthService {
     private redisService: RedisService,
     private auditService: AuditService,
     private twoFactorService: TwoFactorService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(username: string, password: string): Promise<any> {
     const user = await this.prisma.adminUser.findUnique({
-      where: { email },
+      where: { username },
       include: {
         roles: {
           include: {
@@ -41,29 +51,31 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     // Extract permissions
-    const permissions = user.roles.flatMap(userRole =>
-      userRole.role.permissions.map(rolePermission => rolePermission.permission.code)
+    const permissions = user.roles.flatMap((userRole) =>
+      userRole.role.permissions.map(
+        (rolePermission) => rolePermission.permission.code
+      )
     );
 
     const { passwordHash, twoFaSecret, ...result } = user;
     return {
       ...result,
       permissions,
-      roles: user.roles.map(ur => ur.role),
+      roles: user.roles.map((ur) => ur.role),
     };
   }
 
   async login(loginDto: LoginDto, ip: string, userAgent: string) {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const user = await this.validateUser(loginDto.username, loginDto.password);
 
     // Check if 2FA is enabled
     if (user.twoFaSecret && !loginDto.twoFactorToken) {
@@ -78,9 +90,11 @@ export class AuthService {
         user.twoFaSecret,
         loginDto.twoFactorToken
       );
-      
+
       if (!isValidToken) {
-        throw new UnauthorizedException('Invalid two-factor authentication token');
+        throw new UnauthorizedException(
+          "Invalid two-factor authentication token"
+        );
       }
     }
 
@@ -110,7 +124,7 @@ export class AuthService {
     // Log audit event
     await this.auditService.log({
       adminUserId: user.id,
-      action: 'login',
+      action: "login",
       ip,
       userAgent,
     });
@@ -130,9 +144,9 @@ export class AuthService {
 
   async refreshToken(refreshToken: string, userId: string) {
     const storedToken = await this.redisService.get(`refresh_token:${userId}`);
-    
+
     if (!storedToken || storedToken !== refreshToken) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException("Invalid refresh token");
     }
 
     const user = await this.prisma.adminUser.findUnique({
@@ -155,11 +169,13 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
 
-    const permissions = user.roles.flatMap(userRole =>
-      userRole.role.permissions.map(rolePermission => rolePermission.permission.code)
+    const permissions = user.roles.flatMap((userRole) =>
+      userRole.role.permissions.map(
+        (rolePermission) => rolePermission.permission.code
+      )
     );
 
     const payload = {
@@ -191,7 +207,7 @@ export class AuthService {
     // Log audit event
     await this.auditService.log({
       adminUserId: userId,
-      action: 'logout',
+      action: "logout",
       ip,
     });
   }
@@ -203,16 +219,26 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
+    }
+
+    // Check if username is already taken
+    const existingUsername = await this.prisma.adminUser.findUnique({
+      where: { username: createUserDto.username },
+    });
+
+    if (existingUsername) {
+      throw new ConflictException("Username is already taken");
     }
 
     // Hash password
-    const saltRounds = parseInt(this.configService.get('BCRYPT_ROUNDS', '12'));
+    const saltRounds = parseInt(this.configService.get("BCRYPT_ROUNDS", "12"));
     const passwordHash = await bcrypt.hash(createUserDto.password, saltRounds);
 
     // Create user
     const user = await this.prisma.adminUser.create({
       data: {
+        username: createUserDto.username,
         email: createUserDto.email,
         name: createUserDto.name,
         passwordHash,
@@ -228,10 +254,14 @@ export class AuthService {
     if (createdBy) {
       await this.auditService.log({
         adminUserId: createdBy,
-        action: 'create_admin_user',
-        targetType: 'AdminUser',
+        action: "create_admin_user",
+        targetType: "AdminUser",
         targetId: user.id,
-        diffJson: { email: user.email, name: user.name },
+        diffJson: {
+          username: user.username,
+          email: user.email,
+          name: user.name,
+        },
       });
     }
 
@@ -239,13 +269,17 @@ export class AuthService {
     return result;
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto, ip: string) {
+  async changePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+    ip: string
+  ) {
     const user = await this.prisma.adminUser.findUnique({
       where: { id: userId },
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
 
     // Verify current password
@@ -255,12 +289,15 @@ export class AuthService {
     );
 
     if (!isCurrentPasswordValid) {
-      throw new BadRequestException('Current password is incorrect');
+      throw new BadRequestException("Current password is incorrect");
     }
 
     // Hash new password
-    const saltRounds = parseInt(this.configService.get('BCRYPT_ROUNDS', '12'));
-    const newPasswordHash = await bcrypt.hash(changePasswordDto.newPassword, saltRounds);
+    const saltRounds = parseInt(this.configService.get("BCRYPT_ROUNDS", "12"));
+    const newPasswordHash = await bcrypt.hash(
+      changePasswordDto.newPassword,
+      saltRounds
+    );
 
     // Update password
     await this.prisma.adminUser.update({
@@ -274,7 +311,7 @@ export class AuthService {
     // Log audit event
     await this.auditService.log({
       adminUserId: userId,
-      action: 'change_password',
+      action: "change_password",
       ip,
     });
   }
@@ -287,7 +324,7 @@ export class AuthService {
 
     // Assign new roles
     if (roleIds.length > 0) {
-      const roleAssignments = roleIds.map(roleId => ({
+      const roleAssignments = roleIds.map((roleId) => ({
         adminUserId: userId,
         roleId,
       }));
@@ -304,11 +341,14 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
 
     const secret = this.twoFactorService.generateSecret();
-    const qrCode = await this.twoFactorService.generateQRCode(secret, user.email);
+    const qrCode = await this.twoFactorService.generateQRCode(
+      secret,
+      user.email
+    );
 
     // Store temp secret (not activated until verified)
     await this.redisService.setex(
@@ -325,15 +365,18 @@ export class AuthService {
 
   async enableTwoFactor(userId: string, token: string) {
     const tempSecret = await this.redisService.get(`temp_2fa_secret:${userId}`);
-    
+
     if (!tempSecret) {
-      throw new BadRequestException('No pending two-factor setup found');
+      throw new BadRequestException("No pending two-factor setup found");
     }
 
-    const isValidToken = await this.twoFactorService.verifyToken(tempSecret, token);
-    
+    const isValidToken = await this.twoFactorService.verifyToken(
+      tempSecret,
+      token
+    );
+
     if (!isValidToken) {
-      throw new BadRequestException('Invalid verification code');
+      throw new BadRequestException("Invalid verification code");
     }
 
     // Enable 2FA
@@ -348,7 +391,7 @@ export class AuthService {
     // Log audit event
     await this.auditService.log({
       adminUserId: userId,
-      action: 'enable_2fa',
+      action: "enable_2fa",
     });
 
     return { enabled: true };
@@ -360,13 +403,13 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new BadRequestException('Invalid password');
+      throw new BadRequestException("Invalid password");
     }
 
     // Disable 2FA
@@ -378,7 +421,7 @@ export class AuthService {
     // Log audit event
     await this.auditService.log({
       adminUserId: userId,
-      action: 'disable_2fa',
+      action: "disable_2fa",
     });
 
     return { disabled: true };
@@ -408,8 +451,21 @@ export class AuthService {
       return false;
     }
 
-    const permissions = user.roles.flatMap(userRole =>
-      userRole.role.permissions.map(rolePermission => rolePermission.permission.code)
+    // Check if user has superadmin role - superadmin bypasses all permission checks
+    const hasSuperadminRole = user.roles.some(
+      (userRole) =>
+        userRole.role.name === "superadmin" ||
+        userRole.role.name === "Super Admin"
+    );
+
+    if (hasSuperadminRole) {
+      return true;
+    }
+
+    const permissions = user.roles.flatMap((userRole) =>
+      userRole.role.permissions.map(
+        (rolePermission) => rolePermission.permission.code
+      )
     );
 
     return permissions.includes(permission);
@@ -417,15 +473,15 @@ export class AuthService {
 
   private generateRefreshToken(): string {
     return this.jwtService.sign(
-      { type: 'refresh', random: Math.random() },
-      { expiresIn: '30d' }
+      { type: "refresh", random: Math.random() },
+      { expiresIn: "30d" }
     );
   }
 
   private generateTempToken(userId: string): string {
     return this.jwtService.sign(
-      { sub: userId, type: 'temp_2fa' },
-      { expiresIn: '5m' }
+      { sub: userId, type: "temp_2fa" },
+      { expiresIn: "5m" }
     );
   }
 }

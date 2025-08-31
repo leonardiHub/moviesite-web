@@ -1,24 +1,24 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../prisma/prisma.service';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from "passport-jwt";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    private prisma: PrismaService,
+    private prisma: PrismaService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get('JWT_SECRET'),
+      secretOrKey: configService.get("JWT_SECRET"),
     });
   }
 
   async validate(payload: any) {
-    const { sub: userId, email, permissions } = payload;
+    const { userId, email, permissions, username, name } = payload;
 
     // Verify user still exists and is active
     const user = await this.prisma.adminUser.findUnique({
@@ -41,20 +41,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException("User not found");
     }
 
     // Get current permissions (in case they changed)
-    const currentPermissions = user.roles.flatMap(userRole =>
-      userRole.role.permissions.map(rolePermission => rolePermission.permission.code)
+    const currentPermissions = user.roles.flatMap((userRole) =>
+      userRole.role.permissions.map(
+        (rolePermission) => rolePermission.permission.code
+      )
     );
 
     return {
       userId: user.id,
+      username: user.username,
       email: user.email,
       name: user.name,
       permissions: currentPermissions,
-      roles: user.roles.map(ur => ur.role),
+      roles: user.roles.map((ur) => ur.role),
     };
   }
 }

@@ -1,13 +1,17 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class AdminService {
   constructor(
     private prisma: PrismaService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   async findAll(filters: {
@@ -23,8 +27,8 @@ export class AdminService {
 
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: "insensitive" } },
+        { name: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -51,18 +55,18 @@ export class AdminService {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip,
         take: limit,
       }),
       this.prisma.adminUser.count({ where }),
     ]);
 
-    const formattedUsers = users.map(user => {
+    const formattedUsers = users.map((user) => {
       const { passwordHash, twoFaSecret, ...userWithoutSensitiveData } = user;
       return {
         ...userWithoutSensitiveData,
-        roles: user.roles.map(ur => ur.role),
+        roles: user.roles.map((ur) => ur.role),
         hasTwoFactor: !!user.twoFaSecret,
       };
     });
@@ -97,22 +101,23 @@ export class AdminService {
     });
 
     if (!user) {
-      throw new NotFoundException('Admin user not found');
+      throw new NotFoundException("Admin user not found");
     }
 
     const { passwordHash, twoFaSecret, ...userWithoutSensitiveData } = user;
-    
+
     return {
       ...userWithoutSensitiveData,
-      roles: user.roles.map(ur => ur.role),
-      permissions: user.roles.flatMap(ur =>
-        ur.role.permissions.map(rp => rp.permission)
+      roles: user.roles.map((ur) => ur.role),
+      permissions: user.roles.flatMap((ur) =>
+        ur.role.permissions.map((rp) => rp.permission)
       ),
       hasTwoFactor: !!user.twoFaSecret,
     };
   }
 
   async create(data: {
+    username: string;
     email: string;
     name: string;
     password: string;
@@ -124,16 +129,26 @@ export class AdminService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
+    }
+
+    // Check if username is already taken
+    const existingUsername = await this.prisma.adminUser.findUnique({
+      where: { username: data.username },
+    });
+
+    if (existingUsername) {
+      throw new ConflictException("Username is already taken");
     }
 
     // Hash password
-    const saltRounds = parseInt(this.configService.get('BCRYPT_ROUNDS', '12'));
+    const saltRounds = parseInt(this.configService.get("BCRYPT_ROUNDS", "12"));
     const passwordHash = await bcrypt.hash(data.password, saltRounds);
 
     // Create user
     const user = await this.prisma.adminUser.create({
       data: {
+        username: data.username,
         email: data.email,
         name: data.name,
         passwordHash,
@@ -142,7 +157,7 @@ export class AdminService {
 
     // Assign roles if provided
     if (data.roleIds && data.roleIds.length > 0) {
-      const roleAssignments = data.roleIds.map(roleId => ({
+      const roleAssignments = data.roleIds.map((roleId) => ({
         adminUserId: user.id,
         roleId,
       }));
@@ -155,18 +170,21 @@ export class AdminService {
     return this.findOne(user.id);
   }
 
-  async update(id: string, data: {
-    email?: string;
-    name?: string;
-    password?: string;
-    roleIds?: string[];
-  }) {
+  async update(
+    id: string,
+    data: {
+      email?: string;
+      name?: string;
+      password?: string;
+      roleIds?: string[];
+    }
+  ) {
     const user = await this.prisma.adminUser.findUnique({
       where: { id },
     });
 
     if (!user) {
-      throw new NotFoundException('Admin user not found');
+      throw new NotFoundException("Admin user not found");
     }
 
     const updateData: any = {};
@@ -178,7 +196,7 @@ export class AdminService {
       });
 
       if (existingUser) {
-        throw new ConflictException('Email is already taken');
+        throw new ConflictException("Email is already taken");
       }
 
       updateData.email = data.email;
@@ -189,7 +207,9 @@ export class AdminService {
     }
 
     if (data.password) {
-      const saltRounds = parseInt(this.configService.get('BCRYPT_ROUNDS', '12'));
+      const saltRounds = parseInt(
+        this.configService.get("BCRYPT_ROUNDS", "12")
+      );
       updateData.passwordHash = await bcrypt.hash(data.password, saltRounds);
     }
 
@@ -208,7 +228,7 @@ export class AdminService {
 
       // Add new roles
       if (data.roleIds.length > 0) {
-        const roleAssignments = data.roleIds.map(roleId => ({
+        const roleAssignments = data.roleIds.map((roleId) => ({
           adminUserId: id,
           roleId,
         }));
@@ -228,14 +248,14 @@ export class AdminService {
     });
 
     if (!user) {
-      throw new NotFoundException('Admin user not found');
+      throw new NotFoundException("Admin user not found");
     }
 
     await this.prisma.adminUser.delete({
       where: { id },
     });
 
-    return { message: 'Admin user deleted successfully' };
+    return { message: "Admin user deleted successfully" };
   }
 
   async getStats() {
@@ -247,7 +267,7 @@ export class AdminService {
       roleDistribution,
     ] = await Promise.all([
       this.prisma.adminUser.count(),
-      
+
       this.prisma.adminUser.count({
         where: {
           lastLoginAt: {
@@ -287,8 +307,9 @@ export class AdminService {
       activeUsers,
       usersWithTwoFactor,
       recentLogins,
-      twoFactorAdoptionRate: totalUsers > 0 ? (usersWithTwoFactor / totalUsers) * 100 : 0,
-      roleDistribution: roleDistribution.map(role => ({
+      twoFactorAdoptionRate:
+        totalUsers > 0 ? (usersWithTwoFactor / totalUsers) * 100 : 0,
+      roleDistribution: roleDistribution.map((role) => ({
         id: role.id,
         name: role.name,
         userCount: role._count.users,
@@ -299,37 +320,48 @@ export class AdminService {
   async initializeDefaultAdmin() {
     // Check if any admin user exists
     const adminCount = await this.prisma.adminUser.count();
-    
+
     if (adminCount > 0) {
       return null; // Admin already exists
     }
 
-    const defaultEmail = this.configService.get('DEFAULT_ADMIN_EMAIL', 'admin@moviesite.com');
-    const defaultPassword = this.configService.get('DEFAULT_ADMIN_PASSWORD', 'change-me-in-production');
+    const defaultUsername = this.configService.get(
+      "DEFAULT_ADMIN_USERNAME",
+      "admin"
+    );
+    const defaultEmail = this.configService.get(
+      "DEFAULT_ADMIN_EMAIL",
+      "admin@moviesite.com"
+    );
+    const defaultPassword = this.configService.get(
+      "DEFAULT_ADMIN_PASSWORD",
+      "change-me-in-production"
+    );
 
     // Hash password
-    const saltRounds = parseInt(this.configService.get('BCRYPT_ROUNDS', '12'));
+    const saltRounds = parseInt(this.configService.get("BCRYPT_ROUNDS", "12"));
     const passwordHash = await bcrypt.hash(defaultPassword, saltRounds);
 
     // Create default admin
     const admin = await this.prisma.adminUser.create({
       data: {
+        username: defaultUsername,
         email: defaultEmail,
-        name: 'System Administrator',
+        name: "System Administrator",
         passwordHash,
       },
     });
 
     // Get or create Super Admin role
     let superAdminRole = await this.prisma.role.findUnique({
-      where: { name: 'Super Admin' },
+      where: { name: "Super Admin" },
     });
 
     if (!superAdminRole) {
       superAdminRole = await this.prisma.role.create({
         data: {
-          name: 'Super Admin',
-          description: 'Full system access',
+          name: "Super Admin",
+          description: "Full system access",
         },
       });
     }
@@ -345,7 +377,8 @@ export class AdminService {
     return {
       email: defaultEmail,
       password: defaultPassword,
-      message: 'Default admin user created. Please change the password immediately.',
+      message:
+        "Default admin user created. Please change the password immediately.",
     };
   }
 }
