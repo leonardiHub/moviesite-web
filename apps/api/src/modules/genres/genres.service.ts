@@ -199,7 +199,7 @@ export class GenresService {
     const genre = await this.prisma.genre.create({
       data: {
         name: createGenreDto.genreName,
-        // code: createGenreDto.genreCode, // Temporarily disabled until database migration
+        code: createGenreDto.genreCode || this.generateGenreCode(createGenreDto.genreName),
       },
       include: {
         _count: {
@@ -220,16 +220,14 @@ export class GenresService {
     return {
       ...genre,
       genreName: genre.name, // Map name to genreName for frontend
-      genreCode:
-        createGenreDto.genreCode ||
-        this.generateConsistentGenreCode(genre.name), // Use provided or generate consistent code
+      genreCode: genre.code, // Use the actual code from database
       isActive: (genre as any).isActive ?? true, // Default to true if field doesn't exist
       createdAt:
         (genre as any).createdAt?.toISOString() || new Date().toISOString(), // Default if field doesn't exist
       updatedAt:
         (genre as any).updatedAt?.toISOString() || new Date().toISOString(), // Default if field doesn't exist
-      moviesCount: genre._count.movies,
-      seriesCount: genre._count.series,
+      moviesCount: genre._count?.movies || 0,
+      seriesCount: genre._count?.series || 0,
     };
   }
 

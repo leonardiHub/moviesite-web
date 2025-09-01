@@ -63,7 +63,7 @@ export default function AdminPage() {
       }
 
       const response = await fetch(
-        "http://localhost:4000/v1/admin/auth/profile",
+        "http://51.79.254.237:4000/v1/admin/auth/profile",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -100,7 +100,7 @@ export default function AdminPage() {
       }
 
       const response = await fetch(
-        "http://localhost:4000/v1/admin/auth/refresh",
+        "http://51.79.254.237:4000/v1/admin/auth/refresh",
         {
           method: "POST",
           headers: {
@@ -144,7 +144,7 @@ export default function AdminPage() {
   const handleLogin = async (username: string, password: string) => {
     try {
       const response = await fetch(
-        "http://localhost:4000/v1/admin/auth/login",
+        "http://51.79.254.237:4000/v1/admin/auth/login",
         {
           method: "POST",
           headers: {

@@ -107,6 +107,10 @@ interface CreateMovieData {
   genreIds?: string[];
   tagIds?: string[];
   posterFile?: File; // Added for file upload
+  videoFile?: File; // Added for video file upload
+  videoUrl?: string;
+  videoQuality?: string;
+  videoType?: string;
 }
 
 interface UpdateMovieData extends CreateMovieData {}
@@ -130,7 +134,7 @@ export default function MoviesPage() {
   const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
 
   // API base URL
-  const API_BASE = "http://localhost:4000/v1";
+  const API_BASE = "http://51.79.254.237:4000/v1";
 
   // Get admin token from localStorage
   const getAuthToken = () => {
@@ -200,15 +204,20 @@ export default function MoviesPage() {
       // Always use FormData for both create and edit operations
       const formData = new FormData();
 
-      // Always add the poster file (even if it's undefined, it will be handled by the backend)
+      // Add the poster file if provided
       if (movieData.posterFile) {
         formData.append("poster", movieData.posterFile);
       }
 
+      // Add the video file if provided
+      if (movieData.videoFile) {
+        formData.append("video", movieData.videoFile);
+      }
+
       // Add the movie data as JSON string to preserve arrays and types
-      // Remove posterFile when there's a new poster file
-      const { posterFile, ...dataWithoutFile } = movieData;
-      formData.append("movieData", JSON.stringify(dataWithoutFile));
+      // Remove file objects when there are new files
+      const { posterFile, videoFile, ...dataWithoutFiles } = movieData;
+      formData.append("movieData", JSON.stringify(dataWithoutFiles));
 
       const response = await fetch(`${API_BASE}/admin/movies`, {
         method: "POST",
@@ -252,15 +261,20 @@ export default function MoviesPage() {
       // Always use FormData for both create and edit operations
       const formData = new FormData();
 
-      // Always add the poster file (even if it's undefined, it will be handled by the backend)
+      // Add the poster file if provided
       if (movieData.posterFile) {
         formData.append("poster", movieData.posterFile);
       }
 
+      // Add the video file if provided
+      if (movieData.videoFile) {
+        formData.append("video", movieData.videoFile);
+      }
+
       // Add the movie data as JSON string to preserve arrays and types
-      // Remove posterFile when there's a new poster file
-      const { posterFile, ...dataWithoutFile } = movieData;
-      formData.append("movieData", JSON.stringify(dataWithoutFile));
+      // Remove file objects when there are new files
+      const { posterFile, videoFile, ...dataWithoutFiles } = movieData;
+      formData.append("movieData", JSON.stringify(dataWithoutFiles));
 
       const response = await fetch(
         `${API_BASE}/admin/movies/${selectedMovie.id}`,

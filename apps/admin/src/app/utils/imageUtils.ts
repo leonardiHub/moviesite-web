@@ -2,7 +2,7 @@
  * Utility functions for handling image URLs in the admin frontend
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000";
 
 /**
  * Converts an S3 key (e.g., "posters/1756467428561-bj12r1.png")

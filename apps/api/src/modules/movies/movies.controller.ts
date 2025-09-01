@@ -208,7 +208,7 @@ export class MoviesController {
   async play(@Param('id') id: string): Promise<PlayAuthResponseDto> {
     const ttl = 900; // 15 minutes
     const now = Date.now();
-    const base = process.env.PUBLIC_BASE_URL || 'http://localhost:4000';
+    const base = process.env.PUBLIC_BASE_URL || 'http://51.79.254.237:4000';
 
     return {
       movieId: id,

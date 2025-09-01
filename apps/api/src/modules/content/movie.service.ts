@@ -123,7 +123,7 @@ export class MovieService {
       if (posterUrl && !posterUrl.startsWith("http")) {
         const baseUrl = this.configService.get(
           "PUBLIC_BASE_URL",
-          "http://localhost:4000"
+          "http://51.79.254.237:4000"
         );
         // If the S3 key contains a path (e.g., "posters/filename.png"),
         // use the general image endpoint to avoid path encoding issues
@@ -194,7 +194,7 @@ export class MovieService {
     if (posterUrl && !posterUrl.startsWith("http")) {
       const baseUrl = this.configService.get(
         "PUBLIC_BASE_URL",
-        "http://localhost:4000"
+        "http://51.79.254.237:4000"
       );
       // If the S3 key contains a path (e.g., "posters/filename.png"),
       // use the general image endpoint to avoid path encoding issues
@@ -224,6 +224,10 @@ export class MovieService {
 
       posterFile,
       posterUrl,
+      videoFile,
+      videoUrl,
+      videoQuality,
+      videoType,
       ...movieData
     } = createMovieDto;
 
@@ -307,6 +311,13 @@ export class MovieService {
       await this.updateMoviePosterUrl(movie.id, posterUrl);
     }
 
+    // Handle video upload if provided
+    if (videoFile) {
+      await this.uploadMovieVideo(movie.id, videoFile, videoQuality, videoType);
+    } else if (videoUrl) {
+      await this.updateMovieVideoUrl(movie.id, videoUrl, videoQuality, videoType);
+    }
+
     // Index in search engine (optional)
     try {
       if (this.meilisearch) {
@@ -329,6 +340,10 @@ export class MovieService {
 
       posterFile,
       posterUrl,
+      videoFile,
+      videoUrl,
+      videoQuality,
+      videoType,
       ...movieData
     } = updateMovieDto;
 
@@ -429,6 +444,13 @@ export class MovieService {
       await this.updateMoviePoster(id, posterFile);
     } else if (posterUrl) {
       await this.updateMoviePosterUrl(id, posterUrl);
+    }
+
+    // Handle video update if provided
+    if (videoFile) {
+      await this.uploadMovieVideo(id, videoFile, videoQuality, videoType);
+    } else if (videoUrl) {
+      await this.updateMovieVideoUrl(id, videoUrl, videoQuality, videoType);
     }
 
     // Update search index (optional)
@@ -923,5 +945,145 @@ export class MovieService {
       posterUrl: key,
       artworkId: existingPoster?.id || "new",
     };
+  }
+
+  // Video-specific methods
+  async uploadMovieVideo(
+    movieId: string,
+    videoFile: Express.Multer.File,
+    quality?: string,
+    type?: string
+  ) {
+    // Verify movie exists
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+
+    if (!movie) {
+      throw new NotFoundException(`Movie with ID ${movieId} not found`);
+    }
+
+    // Generate S3 path for video
+    const key = this.storage.generatePath("video", videoFile.originalname);
+
+    // Upload to S3
+    await this.storage.uploadFile(key, videoFile.buffer, videoFile.mimetype);
+
+    // Get the public URL for the video
+    const videoUrl = this.storage.getPublicUrl(key);
+
+    // Create source record
+    await this.prisma.source.create({
+      data: {
+        movieId,
+        type: type || this.getVideoTypeFromMimeType(videoFile.mimetype),
+        url: videoUrl,
+        quality: quality || this.getQualityFromFile(videoFile),
+        isActive: true,
+      },
+    });
+
+    return { success: true, videoUrl: key };
+  }
+
+  async updateMovieVideoUrl(
+    movieId: string,
+    videoUrl: string,
+    quality?: string,
+    type?: string
+  ) {
+    // Verify movie exists
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+
+    if (!movie) {
+      throw new NotFoundException(`Movie with ID ${movieId} not found`);
+    }
+
+    // Create or update source record
+    const existingSource = await this.prisma.source.findFirst({
+      where: { movieId, type: type || "mp4" },
+    });
+
+    if (existingSource) {
+      await this.prisma.source.update({
+        where: { id: existingSource.id },
+        data: {
+          url: videoUrl,
+          quality: quality || existingSource.quality,
+          type: type || existingSource.type,
+        },
+      });
+    } else {
+      await this.prisma.source.create({
+        data: {
+          movieId,
+          type: type || "mp4",
+          url: videoUrl,
+          quality: quality || "1080p",
+          isActive: true,
+        },
+      });
+    }
+
+    return { success: true, videoUrl };
+  }
+
+  async deleteMovieVideo(movieId: string, sourceId?: string) {
+    // Verify movie exists
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+
+    if (!movie) {
+      throw new NotFoundException(`Movie with ID ${movieId} not found`);
+    }
+
+    // Find sources to delete
+    const sources = sourceId
+      ? await this.prisma.source.findMany({
+          where: { id: sourceId, movieId },
+        })
+      : await this.prisma.source.findMany({
+          where: { movieId },
+        });
+
+    for (const source of sources) {
+      // Delete from S3 if it's an S3 URL
+      if (source.url && !source.url.startsWith("http")) {
+        try {
+          await this.storage.deleteFile(source.url);
+        } catch (error) {
+          console.error("Failed to delete video from S3:", error);
+        }
+      }
+
+      // Delete from database
+      await this.prisma.source.delete({
+        where: { id: source.id },
+      });
+    }
+
+    return { success: true };
+  }
+
+  // Helper methods
+  private getVideoTypeFromMimeType(mimeType: string): string {
+    if (mimeType.includes("mp4")) return "mp4";
+    if (mimeType.includes("webm")) return "webm";
+    if (mimeType.includes("mov")) return "mov";
+    if (mimeType.includes("avi")) return "avi";
+    return "mp4"; // default
+  }
+
+  private getQualityFromFile(file: Express.Multer.File): string {
+    // Simple quality detection based on file size
+    const sizeInMB = file.size / (1024 * 1024);
+    
+    if (sizeInMB > 1000) return "4k";
+    if (sizeInMB > 500) return "1080p";
+    if (sizeInMB > 200) return "720p";
+    return "480p";
   }
 }

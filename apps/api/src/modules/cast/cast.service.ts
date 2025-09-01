@@ -27,7 +27,7 @@ export class CastService {
 
     const baseUrl = this.configService.get(
       "PUBLIC_BASE_URL",
-      "http://localhost:4000"
+              "http://51.79.254.237:4000"
     );
     return `${baseUrl}/v1/images/${encodeURIComponent(s3Key)}`;
   }

@@ -230,7 +230,7 @@ export class StorageService {
 
   // Generate optimized file paths
   generatePath(
-    type: "poster" | "backdrop" | "avatar" | "logo" | "sponsor" | "subtitle",
+    type: "poster" | "backdrop" | "avatar" | "logo" | "sponsor" | "subtitle" | "video",
     filename: string
   ): string {
     const timestamp = Date.now();

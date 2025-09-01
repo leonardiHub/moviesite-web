@@ -105,6 +105,24 @@ export class CreateMovieDto {
   @ApiPropertyOptional({ description: "Poster URL (if already uploaded)" })
   @IsOptional()
   posterUrl?: string;
+
+  @ApiPropertyOptional({ description: "Video file (for upload)" })
+  @IsOptional()
+  videoFile?: Express.Multer.File;
+
+  @ApiPropertyOptional({ description: "Video URL (if already uploaded)" })
+  @IsOptional()
+  videoUrl?: string;
+
+  @ApiPropertyOptional({ description: "Video quality (720p, 1080p, 4k, etc.)" })
+  @IsOptional()
+  @IsString()
+  videoQuality?: string;
+
+  @ApiPropertyOptional({ description: "Video type (mp4, hls, dash)" })
+  @IsOptional()
+  @IsString()
+  videoType?: string;
 }
 
 export class UpdateMovieDto {
@@ -194,6 +212,24 @@ export class UpdateMovieDto {
   @ApiPropertyOptional({ description: "Poster URL (if already uploaded)" })
   @IsOptional()
   posterUrl?: string;
+
+  @ApiPropertyOptional({ description: "Video file (for upload)" })
+  @IsOptional()
+  videoFile?: Express.Multer.File;
+
+  @ApiPropertyOptional({ description: "Video URL (if already uploaded)" })
+  @IsOptional()
+  videoUrl?: string;
+
+  @ApiPropertyOptional({ description: "Video quality (720p, 1080p, 4k, etc.)" })
+  @IsOptional()
+  @IsString()
+  videoQuality?: string;
+
+  @ApiPropertyOptional({ description: "Video type (mp4, hls, dash)" })
+  @IsOptional()
+  @IsString()
+  videoType?: string;
 }
 
 export class MovieResponseDto {

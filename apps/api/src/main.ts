@@ -48,27 +48,31 @@ async function bootstrap() {
     })
   );
 
-  // CORS - Completely open for development
+  // CORS - Completely open for all origins
   app.enableCors({
-    origin: "*", // Allow all origins
-    credentials: false, // Must be false when using *
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    origin: true, // Allow all origins
+    credentials: true, // Allow credentials
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
     allowedHeaders: ["*"], // Allow all headers
     exposedHeaders: ["*"], // Expose all headers
+    preflightContinue: false,
+    optionsSuccessStatus: 204
   });
 
   // Handle preflight requests - completely permissive
   app.use((req: Request, res: Response, next: NextFunction) => {
     // Set CORS headers for all requests
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD");
     res.header("Access-Control-Allow-Headers", "*");
-    res.header("Access-Control-Allow-Credentials", "false");
+    res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Expose-Headers", "*");
+    res.header("Access-Control-Max-Age", "86400");
 
     // Set cross-origin resource policy headers
     res.header("Cross-Origin-Resource-Policy", "cross-origin");
     res.header("Cross-Origin-Embedder-Policy", "unsafe-none");
+    res.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
 
     if (req.method === "OPTIONS") {
       res.status(200).end();
@@ -99,11 +103,14 @@ async function bootstrap() {
   setupSwagger(app);
 
   const port = process.env.PORT || 4000;
-  await app.listen(port);
+  const host = '0.0.0.0'; // Bind to all interfaces
+  
+  await app.listen(port, host);
 
-  console.log(`🚀 EZ Movie API is running on: http://localhost:${port}/v1`);
-  console.log(`📚 API Documentation: http://localhost:${port}/docs`);
-  console.log(`🗂️ OpenAPI JSON: http://localhost:${port}/openapi.json`);
+  console.log(`🚀 EZ Movie API is running on: http://${host}:${port}/v1`);
+  console.log(`🚀 EZ Movie API is running on: http://51.79.254.237:${port}/v1`);
+  console.log(`📚 API Documentation: http://51.79.254.237:${port}/docs`);
+  console.log(`🗂️ OpenAPI JSON: http://51.79.254.237:${port}/openapi.json`);
 }
 
 bootstrap();

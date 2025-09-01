@@ -80,8 +80,14 @@ export class GenreService {
       throw new ConflictException('Genre with this name already exists');
     }
 
+    // Generate a code from the name
+    const code = this.generateGenreCode(data.name);
+
     return this.prisma.genre.create({
-      data: { name: data.name },
+      data: { 
+        name: data.name,
+        code: code
+      },
     });
   }
 
@@ -102,9 +108,15 @@ export class GenreService {
       }
     }
 
+    // Generate a new code if name changes
+    const code = data.name !== genre.name ? this.generateGenreCode(data.name) : genre.code;
+
     return this.prisma.genre.update({
       where: { id },
-      data: { name: data.name },
+      data: { 
+        name: data.name,
+        code: code
+      },
     });
   }
 
@@ -154,5 +166,14 @@ export class GenreService {
       }))
       .sort((a, b) => b.totalContent - a.totalContent)
       .slice(0, limit);
+  }
+
+  // Helper method to generate genre code
+  private generateGenreCode(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 }
