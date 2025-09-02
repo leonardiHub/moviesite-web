@@ -163,9 +163,12 @@ export class AdminMoviesController {
     if (files?.poster && files.poster[0]) {
       createMovieDto.posterFile = files.poster[0];
     }
-    if (files?.video && files.video[0]) {
-      createMovieDto.videoFile = files.video[0];
+    
+    // Video file is required
+    if (!files?.video || !files.video[0]) {
+      throw new BadRequestException("Video file is required for movie creation");
     }
+    createMovieDto.videoFile = files.video[0];
 
     const result = await this.movieService.create(createMovieDto);
 

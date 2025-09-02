@@ -77,7 +77,7 @@ export default function TestImagePage() {
             </li>
             <li>
               • Our utility transforms them to:
-              "http://51.79.254.237:4000/v1/images/poster/posters%2F1756467428561-bj12r1.png"
+              `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/images/poster/posters%2F1756467428561-bj12r1.png`
             </li>
             <li>• The image proxy generates S3 presigned URLs and redirects</li>
             <li>• Images display perfectly without needing CloudFront CDN!</li>

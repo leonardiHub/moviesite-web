@@ -10,6 +10,8 @@ cd apps/admin
 export PORT=3001
 export NODE_ENV=production
 export HOSTNAME=51.79.254.237
+export NEXT_PUBLIC_API_BASE=http://51.79.254.237:4000
+export NEXT_PUBLIC_API_URL=http://51.79.254.237:4000
 
 # Check if .next folder exists
 if [ ! -d ".next" ]; then

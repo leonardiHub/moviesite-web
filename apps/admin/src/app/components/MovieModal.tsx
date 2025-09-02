@@ -196,7 +196,7 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          "http://51.79.254.237:4000/v1/admin/countries?page=1&limit=1000&sortBy=name&sortOrder=asc",
+          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/countries?page=1&limit=1000&sortBy=name&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -236,7 +236,7 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          "http://51.79.254.237:4000/v1/admin/genres?page=1&limit=1000&sortBy=genreName&sortOrder=asc",
+          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/genres?page=1&limit=1000&sortBy=genreName&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -277,7 +277,7 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          "http://51.79.254.237:4000/v1/admin/tags?page=1&limit=1000&sortBy=tagName&sortOrder=asc",
+          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/tags?page=1&limit=1000&sortBy=tagName&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -318,7 +318,7 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          "http://51.79.254.237:4000/v1/admin/cast?page=1&limit=1000&sortBy=castName&sortOrder=asc",
+          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/cast?page=1&limit=1000&sortBy=castName&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -543,6 +543,12 @@ export default function MovieModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate that video file is provided
+    if (!selectedVideoFile && !formData.videoUrl) {
+      alert("Please upload a video file or provide a video URL. Video is required for all movies.");
+      return;
+    }
 
     // Format data according to API structure
     const submitData: CreateMovieData = {
@@ -840,7 +846,7 @@ export default function MovieModal({
           {/* Video Upload */}
           <div className="bg-gray-50 rounded-xl p-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              Movie Video
+              Movie Video *
             </h4>
             <div className="space-y-4">
               {/* Video File Upload */}
@@ -872,6 +878,7 @@ export default function MovieModal({
                     onChange={handleVideoChange}
                     className="hidden"
                     id="video-upload"
+                    required
                   />
                   <label
                     htmlFor="video-upload"
@@ -886,7 +893,7 @@ export default function MovieModal({
                   </label>
                   {!videoPreview && (
                     <p className="text-sm text-gray-500 mt-2">
-                      Supported formats: MP4, WebM, MOV, AVI
+                      Supported formats: MP4, WebM, MOV, AVI <span className="text-red-500">*Required</span>
                     </p>
                   )}
                 </div>
@@ -944,7 +951,7 @@ export default function MovieModal({
                   placeholder="https://example.com/video.mp4"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Use either file upload or URL, not both
+                  Use either file upload or URL, not both. <span className="text-red-500">Video is required.</span>
                 </p>
               </div>
             </div>

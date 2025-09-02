@@ -11,12 +11,16 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 3001,
-      HOSTNAME: '0.0.0.0'
+      HOSTNAME: '0.0.0.0',
+      NEXT_PUBLIC_API_BASE: 'http://51.79.254.237:4000',
+      NEXT_PUBLIC_API_URL: 'http://51.79.254.237:4000'
     },
     env_production: {
       NODE_ENV: 'production',
       PORT: 3001,
-      HOSTNAME: '0.0.0.0'
+      HOSTNAME: '0.0.0.0',
+      NEXT_PUBLIC_API_BASE: 'http://51.79.254.237:4000',
+      NEXT_PUBLIC_API_URL: 'http://51.79.254.237:4000'
     },
     error_file: './logs/admin-err.log',
     out_file: './logs/admin-out.log',

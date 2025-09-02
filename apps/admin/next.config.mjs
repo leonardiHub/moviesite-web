@@ -4,7 +4,7 @@ export default {
     optimizePackageImports: ['@radix-ui/react-icons'],
   },
   images: {
-    domains: ['51.79.254.237'],
+    domains: ['localhost', '51.79.254.237'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -17,10 +17,16 @@ export default {
     port: 3001,
   },
   async rewrites() {
+    // Auto-detect environment based on NODE_ENV
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const defaultApiUrl = isDevelopment 
+      ? 'http://localhost:4000' 
+      : 'http://51.79.254.237:4000';
+    
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://51.79.254.237:4000'}/api/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_API_URL || defaultApiUrl}/api/:path*`,
       },
     ];
   },

@@ -8,6 +8,7 @@ import {
   Min,
   Max,
   IsUrl,
+  IsNotEmpty,
 } from "class-validator";
 
 export enum MovieStatus {
@@ -106,9 +107,9 @@ export class CreateMovieDto {
   @IsOptional()
   posterUrl?: string;
 
-  @ApiPropertyOptional({ description: "Video file (for upload)" })
-  @IsOptional()
-  videoFile?: Express.Multer.File;
+  @ApiProperty({ description: "Video file (required for upload)" })
+  @IsNotEmpty({ message: "Video file is required" })
+  videoFile!: Express.Multer.File;
 
   @ApiPropertyOptional({ description: "Video URL (if already uploaded)" })
   @IsOptional()
