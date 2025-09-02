@@ -10,9 +10,11 @@ import { HomepageService } from "./homepage.service";
 import { MediaService } from "./media.service";
 
 import { AuthModule } from "../auth/auth.module";
+import { MeilisearchModule } from "../meilisearch/meilisearch.module";
+import { StorageModule } from "../storage/storage.module";
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, MeilisearchModule, StorageModule],
   controllers: [ContentController],
   providers: [
     MovieService,

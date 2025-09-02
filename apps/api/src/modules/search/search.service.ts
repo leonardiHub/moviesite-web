@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { MeilisearchService } from '../meilisearch/meilisearch.service';
+import { Injectable } from "@nestjs/common";
+import { MeilisearchService } from "../meilisearch/meilisearch.service";
 
 @Injectable()
 export class SearchService {
@@ -13,9 +13,10 @@ export class SearchService {
   async synonyms(syns: Record<string, string[]>) {
     // Meili 设置同义词：这里简化为 movies 索引
     const client = this.ms.getClient();
-    await client.index('movies').updateSettings({ synonyms: syns });
+    if (!client) {
+      throw new Error("Meilisearch client is not available");
+    }
+    await client.index("movies").updateSettings({ synonyms: syns });
     return { ok: true };
   }
 }
-
-

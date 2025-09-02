@@ -65,6 +65,21 @@ export class AdminMoviesController {
   @RequirePermissions(PERMISSIONS.CONTENT_MOVIES_VIEW)
   @ApiOperation({
     summary: "Get all movies with pagination and filters (Admin)",
+    description: `
+      Supports filtering by:
+      - Single values: genreId, tagId, castId, countryId
+      - Multiple values (comma-separated): genres, tags, casts, countries
+      - Text search: search
+      - Status: status
+      - Year: year
+      - Pagination: page, limit
+      - Sorting: sortBy, sortOrder
+      
+      Examples:
+      - /admin/movies?genres=id1,id2,id3
+      - /admin/movies?tags=tag1,tag2&casts=cast1,cast2
+      - /admin/movies?countries=country1&status=published
+    `,
   })
   @ApiResponse({
     status: 200,
@@ -76,6 +91,12 @@ export class AdminMoviesController {
     @Query("status") status?: MovieStatus,
     @Query("genreId") genreId?: string,
     @Query("tagId") tagId?: string,
+    @Query("castId") castId?: string,
+    @Query("countryId") countryId?: string,
+    @Query("genres") genres?: string, // Comma-separated genre IDs
+    @Query("tags") tags?: string, // Comma-separated tag IDs
+    @Query("casts") casts?: string, // Comma-separated cast IDs
+    @Query("countries") countries?: string, // Comma-separated country IDs
     @Query("year", new DefaultValuePipe(undefined)) year?: number,
     @Query("page", new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query("limit", new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
@@ -84,11 +105,25 @@ export class AdminMoviesController {
     @Query("sortOrder", new DefaultValuePipe("desc"))
     sortOrder: "asc" | "desc" = "desc"
   ) {
+    // Parse comma-separated values
+    const genreIds = genres ? genres.split(",").filter((id) => id.trim()) : [];
+    const tagIds = tags ? tags.split(",").filter((id) => id.trim()) : [];
+    const castIds = casts ? casts.split(",").filter((id) => id.trim()) : [];
+    const countryIds = countries
+      ? countries.split(",").filter((id) => id.trim())
+      : [];
+
     return this.movieService.findAll({
       search,
       status,
       genreId,
       tagId,
+      castId,
+      countryId,
+      genreIds,
+      tagIds,
+      castIds,
+      countryIds,
       year,
       page,
       limit,

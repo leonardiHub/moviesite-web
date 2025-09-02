@@ -24,6 +24,12 @@ export class MovieService {
     status?: string;
     genreId?: string;
     tagId?: string;
+    castId?: string;
+    countryId?: string;
+    genreIds?: string[];
+    tagIds?: string[];
+    castIds?: string[];
+    countryIds?: string[];
     year?: number;
     page?: number;
     limit?: number;
@@ -35,6 +41,12 @@ export class MovieService {
       status,
       genreId,
       tagId,
+      castId,
+      countryId,
+      genreIds = [],
+      tagIds = [],
+      castIds = [],
+      countryIds = [],
       year,
       page = 1,
       limit = 20,
@@ -53,15 +65,55 @@ export class MovieService {
       where.year = year;
     }
 
-    if (genreId) {
+    // Handle genre filters (prioritize multiple over single)
+    if (genreIds.length > 0) {
+      where.genres = {
+        some: {
+          genreId: { in: genreIds },
+        },
+      };
+    } else if (genreId) {
       where.genres = {
         some: { genreId },
       };
     }
 
-    if (tagId) {
+    // Handle tag filters (prioritize multiple over single)
+    if (tagIds.length > 0) {
+      where.tags = {
+        some: {
+          tagId: { in: tagIds },
+        },
+      };
+    } else if (tagId) {
       where.tags = {
         some: { tagId },
+      };
+    }
+
+    // Handle cast filters (prioritize multiple over single)
+    if (castIds.length > 0) {
+      where.credits = {
+        some: {
+          personId: { in: castIds },
+        },
+      };
+    } else if (castId) {
+      where.credits = {
+        some: { personId: castId },
+      };
+    }
+
+    // Handle country filters (prioritize multiple over single)
+    if (countryIds.length > 0) {
+      where.countries = {
+        some: {
+          countryId: { in: countryIds },
+        },
+      };
+    } else if (countryId) {
+      where.countries = {
+        some: { countryId },
       };
     }
 
@@ -145,7 +197,13 @@ export class MovieService {
         // If the S3 key contains a path (e.g., "videos/filename.mp4"),
         // use the general video endpoint
         if (videoUrl.includes("/")) {
-          videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+          // Split the path and only encode the filename part
+          const pathParts = videoUrl.split("/");
+          const encodedFilename = encodeURIComponent(
+            pathParts[pathParts.length - 1]
+          );
+          const pathWithoutFilename = pathParts.slice(0, -1).join("/");
+          videoUrl = `${baseUrl}/v1/videos/${pathWithoutFilename}/${encodedFilename}`;
         } else {
           videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
         }
@@ -159,6 +217,7 @@ export class MovieService {
         videoId: videoSource?.id || null,
         videoQuality: videoSource?.quality || null,
         videoType: videoSource?.type || null,
+        trailerUrl: movie.trailerUrl,
       };
     });
 
@@ -237,7 +296,13 @@ export class MovieService {
       // If the S3 key contains a path (e.g., "videos/filename.mp4"),
       // use the general video endpoint
       if (videoUrl.includes("/")) {
-        videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+        // Split the path and only encode the filename part
+        const pathParts = videoUrl.split("/");
+        const encodedFilename = encodeURIComponent(
+          pathParts[pathParts.length - 1]
+        );
+        const pathWithoutFilename = pathParts.slice(0, -1).join("/");
+        videoUrl = `${baseUrl}/v1/videos/${pathWithoutFilename}/${encodedFilename}`;
       } else {
         videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
       }
@@ -251,6 +316,7 @@ export class MovieService {
       videoId: videoSource?.id,
       videoQuality: videoSource?.quality,
       videoType: videoSource?.type,
+      trailerUrl: movie.trailerUrl,
     };
 
     return enhancedMovie;
@@ -258,6 +324,11 @@ export class MovieService {
 
   // Create movie with enhanced data and poster handling
   async create(createMovieDto: CreateMovieDto) {
+    console.log("MovieService.create - received data:", {
+      trailerUrl: createMovieDto.trailerUrl,
+      allFields: Object.keys(createMovieDto),
+    });
+
     const {
       genreIds,
       tagIds,
@@ -268,6 +339,7 @@ export class MovieService {
       posterUrl,
       videoFile,
       videoUrl,
+      trailerUrl,
       ...movieData
     } = createMovieDto;
 
@@ -294,9 +366,15 @@ export class MovieService {
       }
     }
 
+    console.log("Prisma create data:", {
+      ...movieData,
+      trailerUrl,
+    });
+
     const movie = await this.prisma.movie.create({
       data: {
         ...movieData,
+        trailerUrl,
         genres: genreIds
           ? {
               create: genreIds.map((genreId) => ({
@@ -372,6 +450,12 @@ export class MovieService {
 
   // Update movie with enhanced data and poster handling
   async update(id: string, updateMovieDto: UpdateMovieDto) {
+    console.log("MovieService.update - received data:", {
+      id,
+      trailerUrl: updateMovieDto.trailerUrl,
+      allFields: Object.keys(updateMovieDto),
+    });
+
     const {
       genreIds,
       tagIds,
@@ -382,6 +466,7 @@ export class MovieService {
       posterUrl,
       videoFile,
       videoUrl,
+      trailerUrl,
       ...movieData
     } = updateMovieDto;
 
@@ -424,10 +509,16 @@ export class MovieService {
       }
     }
 
+    console.log("Prisma update data:", {
+      ...movieData,
+      trailerUrl,
+    });
+
     const movie = await this.prisma.movie.update({
       where: { id },
       data: {
         ...movieData,
+        trailerUrl,
         genres: genreIds
           ? {
               deleteMany: {},

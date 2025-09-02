@@ -114,6 +114,11 @@ export class CreateMovieDto {
   @ApiPropertyOptional({ description: "Video URL (if already uploaded)" })
   @IsOptional()
   videoUrl?: string;
+
+  @ApiPropertyOptional({ description: "YouTube trailer URL" })
+  @IsOptional()
+  @IsString()
+  trailerUrl?: string;
 }
 
 export class UpdateMovieDto {
@@ -211,6 +216,11 @@ export class UpdateMovieDto {
   @ApiPropertyOptional({ description: "Video URL (if already uploaded)" })
   @IsOptional()
   videoUrl?: string;
+
+  @ApiPropertyOptional({ description: "YouTube trailer URL" })
+  @IsOptional()
+  @IsString()
+  trailerUrl?: string;
 }
 
 export class MovieResponseDto {
@@ -276,6 +286,9 @@ export class MovieResponseDto {
 
   @ApiPropertyOptional({ description: "Primary poster artwork ID" })
   posterId?: string;
+
+  @ApiPropertyOptional({ description: "YouTube trailer URL" })
+  trailerUrl?: string;
 
   @ApiProperty()
   _count!: {

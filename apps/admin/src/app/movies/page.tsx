@@ -75,6 +75,11 @@ interface Movie {
   }>;
   posterUrl?: string;
   posterId?: string;
+  videoUrl?: string;
+  videoId?: string;
+  videoQuality?: string;
+  videoType?: string;
+  trailerUrl?: string;
   createdAt: string;
   updatedAt: string;
   _count: {

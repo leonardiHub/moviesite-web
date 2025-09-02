@@ -29,11 +29,17 @@ export class MeilisearchService implements OnModuleInit {
       // Initialize indexes
       await this.initializeIndexes();
     } catch (error) {
-      this.logger.error("Failed to connect to Meilisearch:", error);
+      this.logger.warn(
+        "Meilisearch not available, search functionality will be disabled:",
+        error instanceof Error ? error.message : String(error)
+      );
+      // Don't throw error, just log warning
     }
   }
 
   async initializeIndexes() {
+    if (!this.client) return;
+
     // Movies index
     this.moviesIndex = this.client.index("movies");
     await this.moviesIndex.updateSettings({
@@ -134,6 +140,8 @@ export class MeilisearchService implements OnModuleInit {
 
   // Movie operations
   async indexMovie(movie: any) {
+    if (!this.client || !this.moviesIndex) return;
+
     const document = {
       id: movie.id,
       title: movie.title,
@@ -167,10 +175,12 @@ export class MeilisearchService implements OnModuleInit {
   }
 
   async updateMovie(movieId: string, movie: any) {
+    if (!this.client || !this.moviesIndex) return;
     await this.indexMovie({ ...movie, id: movieId });
   }
 
   async deleteMovie(movieId: string) {
+    if (!this.client || !this.moviesIndex) return;
     await this.moviesIndex.deleteDocument(movieId);
   }
 
@@ -179,6 +189,10 @@ export class MeilisearchService implements OnModuleInit {
     filters?: Record<string, any>,
     options?: any
   ) {
+    if (!this.client || !this.moviesIndex) {
+      return { hits: [], estimatedTotalHits: 0 };
+    }
+
     const searchParams: any = {
       q: query,
       limit: options?.limit || 20,
@@ -218,6 +232,8 @@ export class MeilisearchService implements OnModuleInit {
 
   // Series operations
   async indexSeries(series: any) {
+    if (!this.client || !this.seriesIndex) return;
+
     const document = {
       id: series.id,
       title: series.title,
@@ -253,10 +269,12 @@ export class MeilisearchService implements OnModuleInit {
   }
 
   async updateSeries(seriesId: string, series: any) {
+    if (!this.client || !this.seriesIndex) return;
     await this.indexSeries({ ...series, id: seriesId });
   }
 
   async deleteSeries(seriesId: string) {
+    if (!this.client || !this.seriesIndex) return;
     await this.seriesIndex.deleteDocument(seriesId);
   }
 
@@ -265,6 +283,10 @@ export class MeilisearchService implements OnModuleInit {
     filters?: Record<string, any>,
     options?: any
   ) {
+    if (!this.client || !this.seriesIndex) {
+      return { hits: [], estimatedTotalHits: 0 };
+    }
+
     const searchParams: any = {
       q: query,
       limit: options?.limit || 20,
@@ -301,6 +323,8 @@ export class MeilisearchService implements OnModuleInit {
 
   // People operations
   async indexPerson(person: any) {
+    if (!this.client || !this.peopleIndex) return;
+
     const document = {
       id: person.id,
       name: person.name,
@@ -315,10 +339,12 @@ export class MeilisearchService implements OnModuleInit {
   }
 
   async updatePerson(personId: string, person: any) {
+    if (!this.client || !this.peopleIndex) return;
     await this.indexPerson({ ...person, id: personId });
   }
 
   async deletePerson(personId: string) {
+    if (!this.client || !this.peopleIndex) return;
     await this.peopleIndex.deleteDocument(personId);
   }
 
@@ -327,6 +353,10 @@ export class MeilisearchService implements OnModuleInit {
     filters?: Record<string, any>,
     options?: any
   ) {
+    if (!this.client || !this.peopleIndex) {
+      return { hits: [], estimatedTotalHits: 0 };
+    }
+
     const searchParams: any = {
       q: query,
       limit: options?.limit || 20,
@@ -354,6 +384,15 @@ export class MeilisearchService implements OnModuleInit {
 
   // Global search across all indexes
   async globalSearch(query: string, options?: any) {
+    if (!this.client) {
+      return {
+        movies: [],
+        series: [],
+        people: [],
+        total: 0,
+      };
+    }
+
     const [movies, series, people] = await Promise.all([
       this.searchMovies(query, {}, { limit: options?.movieLimit || 5 }),
       this.searchSeries(query, {}, { limit: options?.seriesLimit || 5 }),
@@ -386,6 +425,8 @@ export class MeilisearchService implements OnModuleInit {
 
   // Index management
   async reindexAll() {
+    if (!this.client) return;
+
     await Promise.all([
       this.moviesIndex.deleteAllDocuments(),
       this.seriesIndex.deleteAllDocuments(),
@@ -398,6 +439,14 @@ export class MeilisearchService implements OnModuleInit {
   }
 
   async getIndexStats() {
+    if (!this.client) {
+      return {
+        movies: { numberOfDocuments: 0 },
+        series: { numberOfDocuments: 0 },
+        people: { numberOfDocuments: 0 },
+      };
+    }
+
     const [moviesStats, seriesStats, peopleStats] = await Promise.all([
       this.moviesIndex.getStats(),
       this.seriesIndex.getStats(),
@@ -412,7 +461,7 @@ export class MeilisearchService implements OnModuleInit {
   }
 
   // Get client for advanced operations
-  getClient(): MeiliSearch {
-    return this.client;
+  getClient(): MeiliSearch | null {
+    return this.client || null;
   }
 }

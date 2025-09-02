@@ -77,6 +77,7 @@ interface Movie {
   posterId?: string;
   videoUrl?: string;
   videoId?: string;
+  trailerUrl?: string;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -102,6 +103,7 @@ interface CreateMovieData {
   posterFile?: File;
   posterUrl?: string;
   videoFile?: File;
+  trailerUrl?: string;
 }
 
 interface MovieModalProps {
@@ -126,6 +128,13 @@ const availableAgeRatings = [
   "TV-MA",
 ];
 
+// Helper function to extract YouTube video ID from URL
+const extractYouTubeId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+};
+
 export default function MovieModal({
   isOpen,
   onClose,
@@ -147,6 +156,7 @@ export default function MovieModal({
     cast: [],
     genreIds: [],
     tagIds: [],
+    trailerUrl: "",
   });
 
   const [newGenre, setNewGenre] = useState("");
@@ -397,6 +407,7 @@ export default function MovieModal({
           isValidUrl(movie.posterUrl)
             ? movie.posterUrl
             : undefined,
+        trailerUrl: movie.trailerUrl || "",
       });
 
       // Set poster preview if movie has poster
@@ -406,7 +417,12 @@ export default function MovieModal({
 
       // Set video preview for existing videos
       if (movie.videoUrl) {
+        console.log("Setting video preview:", movie.videoUrl);
+        console.log("Movie object:", movie);
         setVideoPreview(movie.videoUrl);
+      } else {
+        console.log("No video URL found for movie:", movie);
+        console.log("Available movie properties:", Object.keys(movie));
       }
     } else {
       // Reset form for create mode
@@ -424,6 +440,7 @@ export default function MovieModal({
         cast: [],
         genreIds: [],
         posterUrl: undefined,
+        trailerUrl: "",
       });
       setPosterPreview(null);
       setSelectedPosterFile(null);
@@ -594,6 +611,7 @@ export default function MovieModal({
         ? {}
         : { posterUrl: formData.posterUrl }),
       videoFile: selectedVideoFile || undefined,
+      trailerUrl: formData.trailerUrl || undefined,
     };
 
     // Debug: Log what's being sent
@@ -610,6 +628,7 @@ export default function MovieModal({
         !isValidUrl(formData.posterUrl)
           ? undefined
           : formData.posterUrl,
+      trailerUrl: formData.trailerUrl,
       submitData,
     });
 
@@ -853,19 +872,40 @@ export default function MovieModal({
               {/* Video File Upload */}
               <div className="flex items-center gap-6">
                 {/* Current Video Display */}
-                {(videoPreview || (movie && movie.videoUrl)) && (
-                  <div className="flex items-center gap-4">
-                    <video
-                      src={videoPreview || movie?.videoUrl}
-                      className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200"
-                      controls
-                      muted
-                      onError={(e) => {
-                        // If video fails to load, show placeholder
-                        const videoElement = e.target as HTMLVideoElement;
-                        const parent = videoElement.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `
+                {(() => {
+                  const videoSrc = videoPreview || movie?.videoUrl;
+                  console.log("Video display check:", {
+                    videoPreview,
+                    movieVideoUrl: movie?.videoUrl,
+                    videoSrc,
+                    shouldShow: !!(videoPreview || (movie && movie.videoUrl)),
+                    movieExists: !!movie,
+                    hasVideoUrl: !!movie?.videoUrl,
+                    hasVideoPreview: !!videoPreview,
+                  });
+                  return (
+                    (videoPreview || (movie && movie.videoUrl)) &&
+                    videoSrc && (
+                      <div className="flex items-center gap-4">
+                        <video
+                          src={videoSrc}
+                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200"
+                          controls
+                          muted
+                          onLoadStart={() =>
+                            console.log("Video loading started:", videoSrc)
+                          }
+                          onLoadedData={() =>
+                            console.log("Video loaded successfully:", videoSrc)
+                          }
+                          onError={(e) => {
+                            console.log("Video failed to load:", videoSrc);
+                            console.log("Error details:", e);
+                            // If video fails to load, show placeholder
+                            const videoElement = e.target as HTMLVideoElement;
+                            const parent = videoElement.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
                             <div class="w-32 h-20 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center">
                               <div class="text-center">
                                 <svg class="w-8 h-8 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -875,18 +915,20 @@ export default function MovieModal({
                               </div>
                             </div>
                           `;
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={removeVideo}
-                      className="text-red-600 hover:text-red-700 text-sm font-medium"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={removeVideo}
+                          className="text-red-600 hover:text-red-700 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )
+                  );
+                })()}
 
                 {/* Video Upload Input */}
                 <div className="flex-1">
@@ -896,7 +938,7 @@ export default function MovieModal({
                     onChange={handleVideoChange}
                     className="hidden"
                     id="video-upload"
-                    required
+                    name="videoFile"
                   />
                   <label
                     htmlFor="video-upload"
@@ -916,17 +958,105 @@ export default function MovieModal({
                       />
                     </svg>
                     <span className="font-medium text-gray-700">
-                      {videoPreview ? "Change Video" : "Upload Video"}
+                      {videoPreview || movie?.videoUrl
+                        ? "Change Video"
+                        : "Upload Video"}
                     </span>
                   </label>
-                  {!videoPreview && (
+                  {!videoPreview && !movie?.videoUrl && (
                     <p className="text-sm text-gray-500 mt-2">
                       Supported formats: MP4, WebM, MOV, AVI{" "}
                       <span className="text-red-500">*Required</span>
                     </p>
                   )}
+                  {movie?.videoUrl && !videoPreview && (
+                    <div className="mt-2">
+                      <p className="text-sm text-blue-500">
+                        Video available but preview not loaded
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1 break-all">
+                        URL: {movie.videoUrl}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log("Testing video URL:", movie.videoUrl);
+                          window.open(movie.videoUrl, "_blank");
+                        }}
+                        className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                      >
+                        Test Video URL
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Trailer URL */}
+          <div className="bg-gray-50 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+              Trailer URL
+            </h4>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  YouTube Trailer URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.trailerUrl || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      trailerUrl: e.target.value,
+                    }))
+                  }
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                />
+                <p className="text-sm text-gray-500 mt-2">
+                  Enter a YouTube URL for the movie trailer
+                </p>
+              </div>
+
+              {/* Trailer Preview */}
+              {formData.trailerUrl && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Trailer Preview
+                  </label>
+                  <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    {(() => {
+                      const youtubeId = extractYouTubeId(formData.trailerUrl);
+                      if (youtubeId) {
+                        return (
+                          <iframe
+                            width="100%"
+                            height="200"
+                            src={`https://www.youtube.com/embed/${youtubeId}`}
+                            title="Movie Trailer"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="rounded-lg"
+                          />
+                        );
+                      } else {
+                        return (
+                          <div className="text-center py-8 text-gray-500">
+                            <p>Invalid YouTube URL</p>
+                            <p className="text-sm">
+                              Please enter a valid YouTube URL
+                            </p>
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -27,6 +27,7 @@ model Movie {
   rating         Float?   // Rating from 0-10
   director       String?  // Director name
   cast           String[] @default([]) // Cast members
+  trailerUrl     String?  @map("trailer_url") // YouTube trailer URL
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
