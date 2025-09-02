@@ -16,7 +16,11 @@ import {
   BadRequestException,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { FileInterceptor, FilesInterceptor, FileFieldsInterceptor } from "@nestjs/platform-express";
+import {
+  FileInterceptor,
+  FilesInterceptor,
+  FileFieldsInterceptor,
+} from "@nestjs/platform-express";
 import { validate, ValidationError } from "class-validator";
 import { plainToClass } from "class-transformer";
 import {
@@ -114,12 +118,16 @@ export class AdminMoviesController {
 
   @Post()
   @RequirePermissions(PERMISSIONS.CONTENT_MOVIES_CREATE)
-  @ApiOperation({ summary: "Create a new movie with optional poster and video (Admin)" })
+  @ApiOperation({
+    summary: "Create a new movie with optional poster and video (Admin)",
+  })
   @ApiConsumes("multipart/form-data")
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'poster', maxCount: 1 },
-    { name: 'video', maxCount: 1 }
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "poster", maxCount: 1 },
+      { name: "videoFile", maxCount: 1 },
+    ])
+  )
   @ApiResponse({
     status: 201,
     description: "Movie created successfully",
@@ -127,7 +135,11 @@ export class AdminMoviesController {
   })
   async createMovie(
     @Body() body: any,
-    @UploadedFiles() files: { poster?: Express.Multer.File[], video?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: {
+      poster?: Express.Multer.File[];
+      videoFile?: Express.Multer.File[];
+    },
     @CurrentUser("userId") userId?: string
   ) {
     // Parse the movie data from JSON if it comes from FormData
@@ -163,12 +175,14 @@ export class AdminMoviesController {
     if (files?.poster && files.poster[0]) {
       createMovieDto.posterFile = files.poster[0];
     }
-    
+
     // Video file is required
-    if (!files?.video || !files.video[0]) {
-      throw new BadRequestException("Video file is required for movie creation");
+    if (!files?.videoFile || !files.videoFile[0]) {
+      throw new BadRequestException(
+        "Video file is required for movie creation"
+      );
     }
-    createMovieDto.videoFile = files.video[0];
+    createMovieDto.videoFile = files.videoFile[0];
 
     const result = await this.movieService.create(createMovieDto);
 
@@ -180,7 +194,7 @@ export class AdminMoviesController {
       diffJson: {
         title: result.title,
         hasPoster: !!(files?.poster && files.poster[0]),
-        hasVideo: !!(files?.video && files.video[0]),
+        hasVideo: !!(files?.videoFile && files.videoFile[0]),
       },
     });
 
@@ -193,10 +207,12 @@ export class AdminMoviesController {
     summary: "Update an existing movie with optional poster and video (Admin)",
   })
   @ApiConsumes("multipart/form-data")
-  @UseInterceptors(FileFieldsInterceptor([
-    { name: 'poster', maxCount: 1 },
-    { name: 'video', maxCount: 1 }
-  ]))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "poster", maxCount: 1 },
+      { name: "videoFile", maxCount: 1 },
+    ])
+  )
   @ApiResponse({
     status: 200,
     description: "Movie updated successfully",
@@ -205,7 +221,11 @@ export class AdminMoviesController {
   async updateMovie(
     @Param("id") id: string,
     @Body() body: any,
-    @UploadedFiles() files: { poster?: Express.Multer.File[], video?: Express.Multer.File[] },
+    @UploadedFiles()
+    files: {
+      poster?: Express.Multer.File[];
+      videoFile?: Express.Multer.File[];
+    },
     @CurrentUser("userId") userId?: string
   ) {
     // Parse the movie data from JSON if it comes from FormData
@@ -241,8 +261,8 @@ export class AdminMoviesController {
     if (files?.poster && files.poster[0]) {
       updateMovieDto.posterFile = files.poster[0];
     }
-    if (files?.video && files.video[0]) {
-      updateMovieDto.videoFile = files.video[0];
+    if (files?.videoFile && files.videoFile[0]) {
+      updateMovieDto.videoFile = files.videoFile[0];
     }
 
     const result = await this.movieService.update(id, updateMovieDto);
@@ -255,7 +275,7 @@ export class AdminMoviesController {
       diffJson: {
         ...updateMovieDto,
         hasPoster: !!(files?.poster && files.poster[0]),
-        hasVideo: !!(files?.video && files.video[0]),
+        hasVideo: !!(files?.videoFile && files.videoFile[0]),
       },
     });
 

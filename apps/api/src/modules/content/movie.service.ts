@@ -114,9 +114,10 @@ export class MovieService {
       this.prisma.movie.count({ where }),
     ]);
 
-    // Add poster information to each movie
+    // Add poster and video information to each movie
     const enhancedMovies = movies.map((movie) => {
       const poster = movie.artworks.find((a) => a.kind === "poster");
+      const videoSource = movie.sources[0]; // First active source
 
       // Convert S3 key to image endpoint URL if poster exists
       let posterUrl = poster?.url;
@@ -134,10 +135,30 @@ export class MovieService {
         }
       }
 
+      // Convert S3 key to video endpoint URL if video exists
+      let videoUrl = videoSource?.url;
+      if (videoUrl && !videoUrl.startsWith("http")) {
+        const baseUrl = this.configService.get(
+          "PUBLIC_BASE_URL",
+          "http://51.79.254.237:4000"
+        );
+        // If the S3 key contains a path (e.g., "videos/filename.mp4"),
+        // use the general video endpoint
+        if (videoUrl.includes("/")) {
+          videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+        } else {
+          videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+        }
+      }
+
       return {
         ...movie,
         posterUrl,
         posterId: poster?.id,
+        videoUrl: videoUrl || null,
+        videoId: videoSource?.id || null,
+        videoQuality: videoSource?.quality || null,
+        videoType: videoSource?.type || null,
       };
     });
 
@@ -186,8 +207,9 @@ export class MovieService {
       throw new NotFoundException("Movie not found");
     }
 
-    // Add poster information
+    // Add poster and video information
     const poster = movie.artworks.find((a) => a.kind === "poster");
+    const videoSource = movie.sources[0]; // First active source
 
     // Convert S3 key to image endpoint URL if poster exists
     let posterUrl = poster?.url;
@@ -205,10 +227,30 @@ export class MovieService {
       }
     }
 
+    // Convert S3 key to video endpoint URL if video exists
+    let videoUrl = videoSource?.url;
+    if (videoUrl && !videoUrl.startsWith("http")) {
+      const baseUrl = this.configService.get(
+        "PUBLIC_BASE_URL",
+        "http://51.79.254.237:4000"
+      );
+      // If the S3 key contains a path (e.g., "videos/filename.mp4"),
+      // use the general video endpoint
+      if (videoUrl.includes("/")) {
+        videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+      } else {
+        videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+      }
+    }
+
     const enhancedMovie = {
       ...movie,
       posterUrl,
       posterId: poster?.id,
+      videoUrl,
+      videoId: videoSource?.id,
+      videoQuality: videoSource?.quality,
+      videoType: videoSource?.type,
     };
 
     return enhancedMovie;
@@ -226,8 +268,6 @@ export class MovieService {
       posterUrl,
       videoFile,
       videoUrl,
-      videoQuality,
-      videoType,
       ...movieData
     } = createMovieDto;
 
@@ -313,9 +353,9 @@ export class MovieService {
 
     // Handle video upload if provided
     if (videoFile) {
-      await this.uploadMovieVideo(movie.id, videoFile, videoQuality, videoType);
+      await this.uploadMovieVideo(movie.id, videoFile);
     } else if (videoUrl) {
-      await this.updateMovieVideoUrl(movie.id, videoUrl, videoQuality, videoType);
+      await this.updateMovieVideoUrl(movie.id, videoUrl);
     }
 
     // Index in search engine (optional)
@@ -342,8 +382,6 @@ export class MovieService {
       posterUrl,
       videoFile,
       videoUrl,
-      videoQuality,
-      videoType,
       ...movieData
     } = updateMovieDto;
 
@@ -448,9 +486,9 @@ export class MovieService {
 
     // Handle video update if provided
     if (videoFile) {
-      await this.uploadMovieVideo(id, videoFile, videoQuality, videoType);
+      await this.uploadMovieVideo(id, videoFile);
     } else if (videoUrl) {
-      await this.updateMovieVideoUrl(id, videoUrl, videoQuality, videoType);
+      await this.updateMovieVideoUrl(id, videoUrl);
     }
 
     // Update search index (optional)
@@ -948,12 +986,7 @@ export class MovieService {
   }
 
   // Video-specific methods
-  async uploadMovieVideo(
-    movieId: string,
-    videoFile: Express.Multer.File,
-    quality?: string,
-    type?: string
-  ) {
+  async uploadMovieVideo(movieId: string, videoFile: Express.Multer.File) {
     // Verify movie exists
     const movie = await this.prisma.movie.findUnique({
       where: { id: movieId },
@@ -969,16 +1002,13 @@ export class MovieService {
     // Upload to S3
     await this.storage.uploadFile(key, videoFile.buffer, videoFile.mimetype);
 
-    // Get the public URL for the video
-    const videoUrl = this.storage.getPublicUrl(key);
-
-    // Create source record
+    // Create source record with S3 key (not full URL)
     await this.prisma.source.create({
       data: {
         movieId,
-        type: type || this.getVideoTypeFromMimeType(videoFile.mimetype),
-        url: videoUrl,
-        quality: quality || this.getQualityFromFile(videoFile),
+        type: this.getVideoTypeFromMimeType(videoFile.mimetype),
+        url: key, // Store S3 key instead of full URL
+        quality: this.getQualityFromFile(videoFile),
         isActive: true,
       },
     });
@@ -986,12 +1016,7 @@ export class MovieService {
     return { success: true, videoUrl: key };
   }
 
-  async updateMovieVideoUrl(
-    movieId: string,
-    videoUrl: string,
-    quality?: string,
-    type?: string
-  ) {
+  async updateMovieVideoUrl(movieId: string, videoUrl: string) {
     // Verify movie exists
     const movie = await this.prisma.movie.findUnique({
       where: { id: movieId },
@@ -1003,7 +1028,7 @@ export class MovieService {
 
     // Create or update source record
     const existingSource = await this.prisma.source.findFirst({
-      where: { movieId, type: type || "mp4" },
+      where: { movieId, type: "mp4" },
     });
 
     if (existingSource) {
@@ -1011,17 +1036,15 @@ export class MovieService {
         where: { id: existingSource.id },
         data: {
           url: videoUrl,
-          quality: quality || existingSource.quality,
-          type: type || existingSource.type,
         },
       });
     } else {
       await this.prisma.source.create({
         data: {
           movieId,
-          type: type || "mp4",
+          type: "mp4",
           url: videoUrl,
-          quality: quality || "1080p",
+          quality: "1080p",
           isActive: true,
         },
       });
@@ -1080,7 +1103,7 @@ export class MovieService {
   private getQualityFromFile(file: Express.Multer.File): string {
     // Simple quality detection based on file size
     const sizeInMB = file.size / (1024 * 1024);
-    
+
     if (sizeInMB > 1000) return "4k";
     if (sizeInMB > 500) return "1080p";
     if (sizeInMB > 200) return "720p";

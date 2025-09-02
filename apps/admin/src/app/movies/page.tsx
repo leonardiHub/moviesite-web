@@ -134,7 +134,9 @@ export default function MoviesPage() {
   const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
 
   // API base URL
-  const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1`;
+  const API_BASE = `${
+    process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+  }/v1`;
 
   // Get admin token from localStorage
   const getAuthToken = () => {
@@ -211,7 +213,7 @@ export default function MoviesPage() {
 
       // Add the video file if provided
       if (movieData.videoFile) {
-        formData.append("video", movieData.videoFile);
+        formData.append("videoFile", movieData.videoFile);
       }
 
       // Add the movie data as JSON string to preserve arrays and types
@@ -268,7 +270,7 @@ export default function MoviesPage() {
 
       // Add the video file if provided
       if (movieData.videoFile) {
-        formData.append("video", movieData.videoFile);
+        formData.append("videoFile", movieData.videoFile);
       }
 
       // Add the movie data as JSON string to preserve arrays and types

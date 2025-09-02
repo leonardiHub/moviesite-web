@@ -75,6 +75,8 @@ interface Movie {
   }>;
   posterUrl?: string;
   posterId?: string;
+  videoUrl?: string;
+  videoId?: string;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -100,9 +102,6 @@ interface CreateMovieData {
   posterFile?: File;
   posterUrl?: string;
   videoFile?: File;
-  videoUrl?: string;
-  videoQuality?: string;
-  videoType?: string;
 }
 
 interface MovieModalProps {
@@ -174,9 +173,7 @@ export default function MovieModal({
     null
   );
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
-  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(
-    null
-  );
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
 
   useEffect(() => {
@@ -196,7 +193,9 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/countries?page=1&limit=1000&sortBy=name&sortOrder=asc`,
+          `${
+            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+          }/v1/admin/countries?page=1&limit=1000&sortBy=name&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -236,7 +235,9 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/genres?page=1&limit=1000&sortBy=genreName&sortOrder=asc`,
+          `${
+            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+          }/v1/admin/genres?page=1&limit=1000&sortBy=genreName&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -277,7 +278,9 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/tags?page=1&limit=1000&sortBy=tagName&sortOrder=asc`,
+          `${
+            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+          }/v1/admin/tags?page=1&limit=1000&sortBy=tagName&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -318,7 +321,9 @@ export default function MovieModal({
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/cast?page=1&limit=1000&sortBy=castName&sortOrder=asc`,
+          `${
+            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+          }/v1/admin/cast?page=1&limit=1000&sortBy=castName&sortOrder=asc`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -397,6 +402,11 @@ export default function MovieModal({
       // Set poster preview if movie has poster
       if (movie.posterUrl) {
         setPosterPreview(movie.posterUrl);
+      }
+
+      // Set video preview for existing videos
+      if (movie.videoUrl) {
+        setVideoPreview(movie.videoUrl);
       }
     } else {
       // Reset form for create mode
@@ -544,9 +554,9 @@ export default function MovieModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate that video file is provided
-    if (!selectedVideoFile && !formData.videoUrl) {
-      alert("Please upload a video file or provide a video URL. Video is required for all movies.");
+    // Validate that video file is provided (either new upload or existing video)
+    if (!selectedVideoFile && !(movie && movie.videoUrl)) {
+      alert("Please upload a video file. Video is required for all movies.");
       return;
     }
 
@@ -584,15 +594,6 @@ export default function MovieModal({
         ? {}
         : { posterUrl: formData.posterUrl }),
       videoFile: selectedVideoFile || undefined,
-      // Only include videoUrl if there's no new video file and videoUrl exists and is a valid URL
-      ...(selectedVideoFile ||
-      !formData.videoUrl ||
-      formData.videoUrl.trim() === "" ||
-      !isValidUrl(formData.videoUrl)
-        ? {}
-        : { videoUrl: formData.videoUrl }),
-      videoQuality: formData.videoQuality || undefined,
-      videoType: formData.videoType || undefined,
     };
 
     // Debug: Log what's being sent
@@ -852,13 +853,30 @@ export default function MovieModal({
               {/* Video File Upload */}
               <div className="flex items-center gap-6">
                 {/* Current Video Display */}
-                {videoPreview && (
+                {(videoPreview || (movie && movie.videoUrl)) && (
                   <div className="flex items-center gap-4">
                     <video
-                      src={videoPreview}
+                      src={videoPreview || movie?.videoUrl}
                       className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200"
                       controls
                       muted
+                      onError={(e) => {
+                        // If video fails to load, show placeholder
+                        const videoElement = e.target as HTMLVideoElement;
+                        const parent = videoElement.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-32 h-20 bg-gray-100 rounded-lg border-2 border-gray-200 flex items-center justify-center">
+                              <div class="text-center">
+                                <svg class="w-8 h-8 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <p class="text-xs text-gray-500">Video Preview</p>
+                              </div>
+                            </div>
+                          `;
+                        }
+                      }}
                     />
                     <button
                       type="button"
@@ -884,8 +902,18 @@ export default function MovieModal({
                     htmlFor="video-upload"
                     className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
                   >
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
                     </svg>
                     <span className="font-medium text-gray-700">
                       {videoPreview ? "Change Video" : "Upload Video"}
@@ -893,66 +921,11 @@ export default function MovieModal({
                   </label>
                   {!videoPreview && (
                     <p className="text-sm text-gray-500 mt-2">
-                      Supported formats: MP4, WebM, MOV, AVI <span className="text-red-500">*Required</span>
+                      Supported formats: MP4, WebM, MOV, AVI{" "}
+                      <span className="text-red-500">*Required</span>
                     </p>
                   )}
                 </div>
-              </div>
-
-              {/* Video Quality and Type */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Video Quality
-                  </label>
-                  <select
-                    value={formData.videoQuality || ""}
-                    onChange={(e) => handleInputChange("videoQuality", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  >
-                    <option value="">Auto-detect</option>
-                    <option value="480p">480p</option>
-                    <option value="720p">720p</option>
-                    <option value="1080p">1080p</option>
-                    <option value="4k">4K</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Video Type
-                  </label>
-                  <select
-                    value={formData.videoType || ""}
-                    onChange={(e) => handleInputChange("videoType", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  >
-                    <option value="">Auto-detect</option>
-                    <option value="mp4">MP4</option>
-                    <option value="webm">WebM</option>
-                    <option value="mov">MOV</option>
-                    <option value="avi">AVI</option>
-                    <option value="hls">HLS</option>
-                    <option value="dash">DASH</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Video URL Input (Alternative) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Or provide video URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.videoUrl || ""}
-                  onChange={(e) => handleInputChange("videoUrl", e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="https://example.com/video.mp4"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Use either file upload or URL, not both. <span className="text-red-500">Video is required.</span>
-                </p>
               </div>
             </div>
           </div>

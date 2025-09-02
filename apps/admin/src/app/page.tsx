@@ -63,7 +63,9 @@ export default function AdminPage() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/auth/profile`,
+        `${
+          process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+        }/v1/admin/auth/profile`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -100,7 +102,9 @@ export default function AdminPage() {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/auth/refresh`,
+        `${
+          process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+        }/v1/admin/auth/refresh`,
         {
           method: "POST",
           headers: {
@@ -144,7 +148,9 @@ export default function AdminPage() {
   const handleLogin = async (username: string, password: string) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'}/v1/admin/auth/login`,
+        `${
+          process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+        }/v1/admin/auth/login`,
         {
           method: "POST",
           headers: {

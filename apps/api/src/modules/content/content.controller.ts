@@ -11,10 +11,14 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { FileInterceptor } from "@nestjs/platform-express";
+import {
+  FileInterceptor,
+  FileFieldsInterceptor,
+} from "@nestjs/platform-express";
 import {
   ApiTags,
   ApiOperation,
@@ -127,6 +131,13 @@ export class ContentController {
   @UseGuards(RbacGuard)
   @RequirePermissions(PERMISSIONS.CONTENT_MOVIES_CREATE)
   @ApiOperation({ summary: "Create a new movie" })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "poster", maxCount: 1 },
+      { name: "videoFile", maxCount: 1 },
+    ])
+  )
   @ApiResponse({
     status: 201,
     description: "Movie created successfully",
@@ -134,8 +145,21 @@ export class ContentController {
   })
   async createMovie(
     @Body() createMovieDto: CreateMovieDto,
-    @CurrentUser("userId") userId: string
+    @CurrentUser("userId") userId: string,
+    @UploadedFiles()
+    files?: {
+      poster?: Express.Multer.File[];
+      videoFile?: Express.Multer.File[];
+    }
   ) {
+    // Add files to the DTO if provided
+    if (files?.poster?.[0]) {
+      createMovieDto.posterFile = files.poster[0];
+    }
+    if (files?.videoFile?.[0]) {
+      createMovieDto.videoFile = files.videoFile[0];
+    }
+
     const result = await this.movieService.create(createMovieDto);
 
     await this.auditService.log({
@@ -153,6 +177,13 @@ export class ContentController {
   @UseGuards(RbacGuard)
   @RequirePermissions(PERMISSIONS.CONTENT_MOVIES_UPDATE)
   @ApiOperation({ summary: "Update an existing movie" })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "poster", maxCount: 1 },
+      { name: "videoFile", maxCount: 1 },
+    ])
+  )
   @ApiResponse({
     status: 200,
     description: "Movie updated successfully",
@@ -161,8 +192,21 @@ export class ContentController {
   async updateMovie(
     @Param("id") id: string,
     @Body() updateMovieDto: UpdateMovieDto,
-    @CurrentUser("userId") userId: string
+    @CurrentUser("userId") userId: string,
+    @UploadedFiles()
+    files?: {
+      poster?: Express.Multer.File[];
+      videoFile?: Express.Multer.File[];
+    }
   ) {
+    // Add files to the DTO if provided
+    if (files?.poster?.[0]) {
+      updateMovieDto.posterFile = files.poster[0];
+    }
+    if (files?.videoFile?.[0]) {
+      updateMovieDto.videoFile = files.videoFile[0];
+    }
+
     const result = await this.movieService.update(id, updateMovieDto);
 
     await this.auditService.log({
