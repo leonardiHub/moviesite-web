@@ -43,7 +43,7 @@ cd /home/ubuntu/irn-task-manager/MOVIESITE
 # Option 1: Use the production script
 ./start-admin-simple.sh
 
-# Option 2: Use PM2 (recommended for production)
+# USE THIS - Option 2: Use PM2 (recommended for production)
 pm2 start admin-pm2.config.cjs
 ```
 

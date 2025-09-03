@@ -171,41 +171,63 @@ export class MovieService {
       const poster = movie.artworks.find((a) => a.kind === "poster");
       const videoSource = movie.sources[0]; // First active source
 
-      // Convert S3 key to image endpoint URL if poster exists
+      // Convert S3 key to direct S3 URL or image endpoint URL if poster exists
       let posterUrl = poster?.url;
       if (posterUrl && !posterUrl.startsWith("http")) {
-        const baseUrl = this.configService.get(
-          "PUBLIC_BASE_URL",
-          "http://51.79.254.237:4000"
-        );
-        // If the S3 key contains a path (e.g., "posters/filename.png"),
-        // use the general image endpoint to avoid path encoding issues
-        if (posterUrl.includes("/")) {
-          posterUrl = `${baseUrl}/v1/images/${encodeURIComponent(posterUrl)}`;
+        const s3Bucket = this.configService.get("S3_BUCKET_NAME");
+        const s3Region = this.configService.get("S3_REGION", "us-east-1");
+        const useDirectS3 =
+          this.configService.get("USE_DIRECT_S3_URLS", "false") === "true";
+
+        if (useDirectS3 && s3Bucket) {
+          // Generate direct S3 URL for poster
+          posterUrl = `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${posterUrl}`;
         } else {
-          posterUrl = `${baseUrl}/v1/images/poster/${encodeURIComponent(posterUrl)}`;
+          // Use API endpoint URL (current behavior)
+          const baseUrl = this.configService.get(
+            "PUBLIC_BASE_URL",
+            "http://51.79.254.237:4000"
+          );
+          // If the S3 key contains a path (e.g., "posters/filename.png"),
+          // use the general image endpoint to avoid path encoding issues
+          if (posterUrl.includes("/")) {
+            posterUrl = `${baseUrl}/v1/images/${encodeURIComponent(posterUrl)}`;
+          } else {
+            posterUrl = `${baseUrl}/v1/images/poster/${encodeURIComponent(posterUrl)}`;
+          }
         }
       }
 
-      // Convert S3 key to video endpoint URL if video exists
+      // Convert S3 key to direct S3 URL or API endpoint URL
       let videoUrl = videoSource?.url;
+      let s3DirectUrl = null;
+
       if (videoUrl && !videoUrl.startsWith("http")) {
-        const baseUrl = this.configService.get(
-          "PUBLIC_BASE_URL",
-          "http://51.79.254.237:4000"
-        );
-        // If the S3 key contains a path (e.g., "videos/filename.mp4"),
-        // use the general video endpoint
-        if (videoUrl.includes("/")) {
-          // Split the path and only encode the filename part
-          const pathParts = videoUrl.split("/");
-          const encodedFilename = encodeURIComponent(
-            pathParts[pathParts.length - 1]
-          );
-          const pathWithoutFilename = pathParts.slice(0, -1).join("/");
-          videoUrl = `${baseUrl}/v1/videos/${pathWithoutFilename}/${encodedFilename}`;
+        const s3Bucket = this.configService.get("S3_BUCKET_NAME");
+        const s3Region = this.configService.get("S3_REGION", "us-east-1");
+        const useDirectS3 =
+          this.configService.get("USE_DIRECT_S3_URLS", "false") === "true";
+
+        if (useDirectS3 && s3Bucket) {
+          // Generate direct S3 URL
+          s3DirectUrl = `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${videoUrl}`;
+          videoUrl = s3DirectUrl; // Use direct S3 URL as primary
         } else {
-          videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+          // Use API endpoint URL (current behavior)
+          const baseUrl = this.configService.get(
+            "PUBLIC_BASE_URL",
+            "http://51.79.254.237:4000"
+          );
+          if (videoUrl.includes("/")) {
+            const pathParts = videoUrl.split("/");
+            const encodedFilename = encodeURIComponent(
+              pathParts[pathParts.length - 1]
+            );
+            const pathWithoutFilename = pathParts.slice(0, -1).join("/");
+            videoUrl = `${baseUrl}/v1/videos/${pathWithoutFilename}/${encodedFilename}`;
+          } else {
+            videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+          }
         }
       }
 
@@ -217,6 +239,7 @@ export class MovieService {
         videoId: videoSource?.id || null,
         videoQuality: videoSource?.quality || null,
         videoType: videoSource?.type || null,
+        s3Url: s3DirectUrl || videoSource?.url || null, // Direct S3 URL or original S3 key
         trailerUrl: movie.trailerUrl,
       };
     });
@@ -270,41 +293,63 @@ export class MovieService {
     const poster = movie.artworks.find((a) => a.kind === "poster");
     const videoSource = movie.sources[0]; // First active source
 
-    // Convert S3 key to image endpoint URL if poster exists
+    // Convert S3 key to direct S3 URL or image endpoint URL if poster exists
     let posterUrl = poster?.url;
     if (posterUrl && !posterUrl.startsWith("http")) {
-      const baseUrl = this.configService.get(
-        "PUBLIC_BASE_URL",
-        "http://51.79.254.237:4000"
-      );
-      // If the S3 key contains a path (e.g., "posters/filename.png"),
-      // use the general image endpoint to avoid path encoding issues
-      if (posterUrl.includes("/")) {
-        posterUrl = `${baseUrl}/v1/images/${encodeURIComponent(posterUrl)}`;
+      const s3Bucket = this.configService.get("S3_BUCKET_NAME");
+      const s3Region = this.configService.get("S3_REGION", "us-east-1");
+      const useDirectS3 =
+        this.configService.get("USE_DIRECT_S3_URLS", "false") === "true";
+
+      if (useDirectS3 && s3Bucket) {
+        // Generate direct S3 URL for poster
+        posterUrl = `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${posterUrl}`;
       } else {
-        posterUrl = `${baseUrl}/v1/images/poster/${encodeURIComponent(posterUrl)}`;
+        // Use API endpoint URL (current behavior)
+        const baseUrl = this.configService.get(
+          "PUBLIC_BASE_URL",
+          "http://51.79.254.237:4000"
+        );
+        // If the S3 key contains a path (e.g., "posters/filename.png"),
+        // use the general image endpoint to avoid path encoding issues
+        if (posterUrl.includes("/")) {
+          posterUrl = `${baseUrl}/v1/images/${encodeURIComponent(posterUrl)}`;
+        } else {
+          posterUrl = `${baseUrl}/v1/images/poster/${encodeURIComponent(posterUrl)}`;
+        }
       }
     }
 
-    // Convert S3 key to video endpoint URL if video exists
+    // Convert S3 key to direct S3 URL or API endpoint URL
     let videoUrl = videoSource?.url;
+    let s3DirectUrl = null;
+
     if (videoUrl && !videoUrl.startsWith("http")) {
-      const baseUrl = this.configService.get(
-        "PUBLIC_BASE_URL",
-        "http://51.79.254.237:4000"
-      );
-      // If the S3 key contains a path (e.g., "videos/filename.mp4"),
-      // use the general video endpoint
-      if (videoUrl.includes("/")) {
-        // Split the path and only encode the filename part
-        const pathParts = videoUrl.split("/");
-        const encodedFilename = encodeURIComponent(
-          pathParts[pathParts.length - 1]
-        );
-        const pathWithoutFilename = pathParts.slice(0, -1).join("/");
-        videoUrl = `${baseUrl}/v1/videos/${pathWithoutFilename}/${encodedFilename}`;
+      const s3Bucket = this.configService.get("S3_BUCKET_NAME");
+      const s3Region = this.configService.get("S3_REGION", "us-east-1");
+      const useDirectS3 =
+        this.configService.get("USE_DIRECT_S3_URLS", "false") === "true";
+
+      if (useDirectS3 && s3Bucket) {
+        // Generate direct S3 URL
+        s3DirectUrl = `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${videoUrl}`;
+        videoUrl = s3DirectUrl; // Use direct S3 URL as primary
       } else {
-        videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+        // Use API endpoint URL (current behavior)
+        const baseUrl = this.configService.get(
+          "PUBLIC_BASE_URL",
+          "http://51.79.254.237:4000"
+        );
+        if (videoUrl.includes("/")) {
+          const pathParts = videoUrl.split("/");
+          const encodedFilename = encodeURIComponent(
+            pathParts[pathParts.length - 1]
+          );
+          const pathWithoutFilename = pathParts.slice(0, -1).join("/");
+          videoUrl = `${baseUrl}/v1/videos/${pathWithoutFilename}/${encodedFilename}`;
+        } else {
+          videoUrl = `${baseUrl}/v1/videos/${encodeURIComponent(videoUrl)}`;
+        }
       }
     }
 
@@ -316,6 +361,7 @@ export class MovieService {
       videoId: videoSource?.id,
       videoQuality: videoSource?.quality,
       videoType: videoSource?.type,
+      s3Url: s3DirectUrl || videoSource?.url || null, // Direct S3 URL or original S3 key
       trailerUrl: movie.trailerUrl,
     };
 

@@ -287,6 +287,21 @@ export class MovieResponseDto {
   @ApiPropertyOptional({ description: "Primary poster artwork ID" })
   posterId?: string;
 
+  @ApiPropertyOptional({ description: "Video URL (API endpoint)" })
+  videoUrl?: string;
+
+  @ApiPropertyOptional({ description: "Video ID" })
+  videoId?: string;
+
+  @ApiPropertyOptional({ description: "Video quality" })
+  videoQuality?: string;
+
+  @ApiPropertyOptional({ description: "Video type" })
+  videoType?: string;
+
+  @ApiPropertyOptional({ description: "Original S3 URL" })
+  s3Url?: string;
+
   @ApiPropertyOptional({ description: "YouTube trailer URL" })
   trailerUrl?: string;
 

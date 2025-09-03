@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,111 +7,96 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========================================
-// Content Management
-// ========================================
-
 model Movie {
-  id             String   @id @default(cuid())
-  title          String
-  originalTitle  String?  @map("original_title")
-  synopsis       String?
-  year           Int?
-  runtime        Int?     // minutes
-  ageRating      String?  @map("age_rating")
-
-  status         String   @default("draft") // draft, published, archived
-  rating         Float?   // Rating from 0-10
-  director       String?  // Director name
-  cast           String[] @default([]) // Cast members
-  trailerUrl     String?  @map("trailer_url") // YouTube trailer URL
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  genres         MovieGenre[]
-  tags           MovieTag[]
-  credits        Credit[]
-  sources        Source[]
-  subtitles      Subtitle[]
-  artworks       Artwork[]
+  id              String           @id @default(cuid())
+  title           String
+  originalTitle   String?          @map("original_title")
+  synopsis        String?
+  year            Int?
+  runtime         Int?
+  ageRating       String?          @map("age_rating")
+  status          String           @default("draft")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  cast            String[]         @default([])
+  director        String?
+  rating          Float?
+  trailerUrl      String?          @map("trailer_url")
+  artworks        Artwork[]
   collectionItems CollectionItem[]
-  userHistories  UserHistory[]
-  userFavorites  UserFavorite[]
-  reports        Report[]
-  countries      MovieCountry[]
+  credits         Credit[]
+  countries       MovieCountry[]
+  genres          MovieGenre[]
+  tags            MovieTag[]
+  reports         Report[]
+  sources         Source[]
+  subtitles       Subtitle[]
+  userFavorites   UserFavorite[]
+  userHistories   UserHistory[]
 
   @@map("movies")
 }
 
 model Series {
-  id        String   @id @default(cuid())
-  title     String
-  synopsis  String?
-  status    String   @default("draft")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  seasons       Season[]
-  genres        SeriesGenre[]
-  tags          SeriesTag[]
-  credits       Credit[]
-  artworks      Artwork[]
+  id              String           @id @default(cuid())
+  title           String
+  synopsis        String?
+  status          String           @default("draft")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  artworks        Artwork[]
   collectionItems CollectionItem[]
+  credits         Credit[]
+  seasons         Season[]
+  genres          SeriesGenre[]
+  tags            SeriesTag[]
 
   @@map("series")
 }
 
 model Season {
-  id       String @id @default(cuid())
-  seriesId String @map("series_id")
+  id       String    @id @default(cuid())
+  seriesId String    @map("series_id")
   seq      Int
   title    String?
   synopsis String?
-
-  // Relations
-  series   Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  episodes Episode[]
   artworks Artwork[]
+  episodes Episode[]
+  series   Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@unique([seriesId, seq])
   @@map("seasons")
 }
 
 model Episode {
-  id       String @id @default(cuid())
-  seasonId String @map("season_id")
-  seq      Int
-  title    String
-  synopsis String?
-  runtime  Int?   // minutes
-
-  // Relations
-  season        Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  id            String         @id @default(cuid())
+  seasonId      String         @map("season_id")
+  seq           Int
+  title         String
+  synopsis      String?
+  runtime       Int?
+  artworks      Artwork[]
   credits       Credit[]
+  season        Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  reports       Report[]
   sources       Source[]
   subtitles     Subtitle[]
-  artworks      Artwork[]
-  userHistories UserHistory[]
   userFavorites UserFavorite[]
-  reports       Report[]
+  userHistories UserHistory[]
 
   @@unique([seasonId, seq])
   @@map("episodes")
 }
 
 model Genre {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  code      String   @unique
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  movies MovieGenre[]
-  series SeriesGenre[]
+  id        String        @id @default(cuid())
+  name      String        @unique
+  code      String        @unique
+  createdAt DateTime      @default(now()) @map("created_at")
+  isActive  Boolean       @default(true) @map("is_active")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  movies    MovieGenre[]
+  series    SeriesGenre[]
 
   @@map("genres")
 }
@@ -122,9 +104,8 @@ model Genre {
 model MovieGenre {
   movieId String @map("movie_id")
   genreId String @map("genre_id")
-
-  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@id([movieId, genreId])
   @@map("movie_genres")
@@ -133,25 +114,22 @@ model MovieGenre {
 model SeriesGenre {
   seriesId String @map("series_id")
   genreId  String @map("genre_id")
-
-  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  genre  Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  genre    Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  series   Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@id([seriesId, genreId])
   @@map("series_genres")
 }
 
 model Tag {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  code      String   @unique
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  movies MovieTag[]
-  series SeriesTag[]
+  id        String      @id @default(cuid())
+  name      String      @unique
+  code      String      @unique
+  createdAt DateTime    @default(now()) @map("created_at")
+  isActive  Boolean     @default(true) @map("is_active")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+  movies    MovieTag[]
+  series    SeriesTag[]
 
   @@map("tags")
 }
@@ -159,9 +137,8 @@ model Tag {
 model MovieTag {
   movieId String @map("movie_id")
   tagId   String @map("tag_id")
-
-  movie Movie @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([movieId, tagId])
   @@map("movie_tags")
@@ -170,42 +147,36 @@ model MovieTag {
 model SeriesTag {
   seriesId String @map("series_id")
   tagId    String @map("tag_id")
-
-  series Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  series   Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([seriesId, tagId])
   @@map("series_tags")
 }
 
 model Country {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
-  code        String   @unique // ISO 3166-1 alpha-2 code
-  nativeName  String?  @map("native_name")
-  flag        String?  // Flag emoji
-  flagUrl     String?  @map("flag_url")
+  code        String         @unique
+  nativeName  String?        @map("native_name")
+  flag        String?
+  flagUrl     String?        @map("flag_url")
   description String?
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  movies MovieCountry[]
+  isActive    Boolean        @default(true) @map("is_active")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  movies      MovieCountry[]
 
   @@index([code])
   @@index([isActive])
   @@map("countries")
 }
 
-
-
 model MovieCountry {
-  movieId   String @map("movie_id")
-  countryId String @map("country_id")
-
-  movie   Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  movieId   String  @map("movie_id")
+  countryId String  @map("country_id")
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  movie     Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@id([movieId, countryId])
   @@map("movie_countries")
@@ -215,48 +186,42 @@ model Person {
   id          String   @id @default(cuid())
   name        String
   avatar      String?
+  createdAt   DateTime @default(now()) @map("created_at")
   description String?
   isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  credits Credit[]
+  credits     Credit[]
 
   @@map("people")
 }
 
 model Credit {
-  id        String  @id @default(cuid())
-  personId  String  @map("person_id")
-  movieId   String? @map("movie_id")
-  episodeId String? @map("episode_id")
-  seriesId  String? @map("series_id")
-  role      String  // actor, director, writer, producer, etc.
-
-  // Relations
-  person  Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
-  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  series  Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  personId  String   @map("person_id")
+  movieId   String?  @map("movie_id")
+  episodeId String?  @map("episode_id")
+  seriesId  String?  @map("series_id")
+  role      String
+  episode   Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  series    Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@map("credits")
 }
 
 model Source {
-  id           String   @id @default(cuid())
-  movieId      String?  @map("movie_id")
-  episodeId    String?  @map("episode_id")
-  type         String   // hls, dash, mp4
-  url          String
-  quality      String?  // 720p, 1080p, 4k, etc.
-  drmFlag      Boolean  @default(false) @map("drm_flag")
-  regionLimit  String[] @default([]) @map("region_limit")
-  isActive     Boolean  @default(true) @map("is_active")
-
-  // Relations
-  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  movieId     String?  @map("movie_id")
+  episodeId   String?  @map("episode_id")
+  type        String
+  url         String
+  quality     String?
+  drmFlag     Boolean  @default(false) @map("drm_flag")
+  regionLimit String[] @default([]) @map("region_limit")
+  isActive    Boolean  @default(true) @map("is_active")
+  episode     Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  movie       Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@index([movieId])
   @@index([episodeId])
@@ -264,17 +229,15 @@ model Source {
 }
 
 model Subtitle {
-  id        String  @id @default(cuid())
-  movieId   String? @map("movie_id")
-  episodeId String? @map("episode_id")
+  id        String   @id @default(cuid())
+  movieId   String?  @map("movie_id")
+  episodeId String?  @map("episode_id")
   lang      String
-  format    String  // srt, vtt, ass
+  format    String
   url       String
-  isDefault Boolean @default(false) @map("is_default")
-
-  // Relations
-  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  isDefault Boolean  @default(false) @map("is_default")
+  episode   Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
 
   @@index([movieId])
   @@index([episodeId])
@@ -282,21 +245,19 @@ model Subtitle {
 }
 
 model Artwork {
-  id       String @id @default(cuid())
-  movieId  String? @map("movie_id")
-  episodeId String? @map("episode_id")
-  seriesId String? @map("series_id")
-  seasonId String? @map("season_id")
-  kind     String // poster, backdrop, sprite
-  url      String
-  width    Int?
-  height   Int?
-
-  // Relations
-  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  series  Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  season  Season?  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  movieId   String?  @map("movie_id")
+  episodeId String?  @map("episode_id")
+  seriesId  String?  @map("series_id")
+  seasonId  String?  @map("season_id")
+  kind      String
+  url       String
+  width     Int?
+  height    Int?
+  episode   Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  season    Season?  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  series    Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@index([movieId])
   @@index([episodeId])
@@ -306,27 +267,23 @@ model Artwork {
 }
 
 model Collection {
-  id          String @id @default(cuid())
+  id          String           @id @default(cuid())
   name        String
   description String?
-
-  // Relations
-  items CollectionItem[]
+  items       CollectionItem[]
 
   @@map("collections")
 }
 
 model CollectionItem {
-  id           String @id @default(cuid())
-  collectionId String @map("collection_id")
-  movieId      String? @map("movie_id")
-  seriesId     String? @map("series_id")
-  order        Int    @default(0)
-
-  // Relations
-  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  movie      Movie?     @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  series     Series?    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  collectionId String     @map("collection_id")
+  movieId      String?    @map("movie_id")
+  seriesId     String?    @map("series_id")
+  order        Int        @default(0)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  movie        Movie?     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  series       Series?    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   @@unique([collectionId, movieId])
   @@unique([collectionId, seriesId])
@@ -337,30 +294,24 @@ model HomepageSection {
   id         String @id @default(cuid())
   key        String @unique
   title      String
-  layout     String // hero, carousel, grid
+  layout     String
   configJson Json   @map("config_json")
   order      Int    @default(0)
 
   @@map("homepage_sections")
 }
 
-// ========================================
-// User Management
-// ========================================
-
 model User {
-  id        String   @id @default(cuid())
-  email     String?  @unique
-  phone     String?  @unique
+  id        String         @id @default(cuid())
+  email     String?        @unique
+  phone     String?        @unique
   nickname  String?
   avatar    String?
-  status    String   @default("active") // active, banned, suspended
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  histories UserHistory[]
-  favorites UserFavorite[]
+  status    String         @default("active")
+  createdAt DateTime       @default(now()) @map("created_at")
   reports   Report[]
+  favorites UserFavorite[]
+  histories UserHistory[]
 
   @@map("users")
 }
@@ -373,11 +324,9 @@ model UserHistory {
   progressSec Int      @default(0) @map("progress_sec")
   completed   Boolean  @default(false)
   updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  episode     Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  movie       Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, movieId])
   @@unique([userId, episodeId])
@@ -390,11 +339,9 @@ model UserFavorite {
   movieId   String?  @map("movie_id")
   episodeId String?  @map("episode_id")
   createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  episode   Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, movieId])
   @@unique([userId, episodeId])
@@ -405,197 +352,165 @@ model Report {
   id        String   @id @default(cuid())
   movieId   String?  @map("movie_id")
   episodeId String?  @map("episode_id")
-  userId    String?  @map("user_id") // reporter
+  userId    String?  @map("user_id")
   reason    String
-  status    String   @default("pending") // pending, resolved, dismissed
+  status    String   @default("pending")
   createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  movie   Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  episode   Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@index([movieId])
   @@index([episodeId])
   @@map("reports")
 }
 
-// ========================================
-// Admin & RBAC
-// ========================================
-
 model AdminUser {
-  id             String    @id @default(cuid())
-  username       String    @unique
-  email          String    @unique
-  name           String
-  passwordHash   String    @map("password_hash")
-  twoFaSecret    String?   @map("two_fa_secret")
-  lastLoginAt    DateTime? @map("last_login_at")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  roles     AdminUserRole[]
-  auditLogs AuditLog[]
+  id           String          @id @default(cuid())
+  email        String          @unique
+  name         String
+  passwordHash String          @map("password_hash")
+  twoFaSecret  String?         @map("two_fa_secret")
+  lastLoginAt  DateTime?       @map("last_login_at")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  username     String          @unique
+  roles        AdminUserRole[]
+  auditLogs    AuditLog[]
 
   @@map("admin_users")
 }
 
 model Role {
-  id          String @id @default(cuid())
-  name        String @unique
+  id          String           @id @default(cuid())
+  name        String           @unique
   description String?
-
-  // Relations
-  permissions RolePermission[]
   users       AdminUserRole[]
+  permissions RolePermission[]
 
   @@map("roles")
 }
 
 model Permission {
-  id          String @id @default(cuid())
-  code        String @unique // e.g., "content.movies.create", "analytics.view"
+  id          String           @id @default(cuid())
+  code        String           @unique
   description String?
-
-  // Relations
-  roles RolePermission[]
+  roles       RolePermission[]
 
   @@map("permissions")
 }
 
 model RolePermission {
-  roleId       String @map("role_id")
-  permissionId String @map("permission_id")
-
-  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
 }
 
 model AdminUserRole {
-  adminUserId String @map("admin_user_id")
-  roleId      String @map("role_id")
-
-  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
-  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  adminUserId String    @map("admin_user_id")
+  roleId      String    @map("role_id")
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([adminUserId, roleId])
   @@map("admin_user_roles")
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  adminUserId String?  @map("admin_user_id")
-  action      String   // create, update, delete, login, etc.
-  targetType  String?  @map("target_type")
-  targetId    String?  @map("target_id")
-  diffJson    Json?    @map("diff_json")
+  id          String     @id @default(cuid())
+  adminUserId String?    @map("admin_user_id")
+  action      String
+  targetType  String?    @map("target_type")
+  targetId    String?    @map("target_id")
+  diffJson    Json?      @map("diff_json")
   ip          String?
-  userAgent   String?  @map("user_agent")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  // Relations
-  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  userAgent   String?    @map("user_agent")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
 
   @@map("audit_logs")
 }
 
-// ========================================
-// Brand & Sponsors
-// ========================================
-
 model Brand {
-  id         String  @id @default(cuid())
-  name       String
-  logosJson  Json    @map("logos_json") // {light, dark, mono}
-  paletteJson Json   @map("palette_json") // {primary, accent, bg, text}
-  fontFamily String  @map("font_family")
-  faviconUrl String? @map("favicon_url")
-  ogImageUrl String? @map("og_image_url")
-  isActive   Boolean @default(false) @map("is_active")
+  id          String  @id @default(cuid())
+  name        String
+  logosJson   Json    @map("logos_json")
+  paletteJson Json    @map("palette_json")
+  fontFamily  String  @map("font_family")
+  faviconUrl  String? @map("favicon_url")
+  ogImageUrl  String? @map("og_image_url")
+  isActive    Boolean @default(false) @map("is_active")
 
   @@map("brands")
 }
 
 model Sponsor {
-  id      String @id @default(cuid())
-  name    String
-  website String?
-  contact String?
-
-  // Relations
-  assets    SponsorAsset[]
+  id        String         @id @default(cuid())
+  name      String
+  website   String?
+  contact   String?
   campaigns Campaign[]
+  assets    SponsorAsset[]
 
   @@map("sponsors")
 }
 
 model SponsorAsset {
-  id        String @id @default(cuid())
-  sponsorId String @map("sponsor_id")
-  type      String // image, video
-  url       String
-  width     Int?
-  height    Int?
-  sizeKb    Int?   @map("size_kb")
-
-  // Relations
-  sponsor         Sponsor         @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
-  campaignAssets  CampaignAsset[]
+  id             String          @id @default(cuid())
+  sponsorId      String          @map("sponsor_id")
+  type           String
+  url            String
+  width          Int?
+  height         Int?
+  sizeKb         Int?            @map("size_kb")
+  campaignAssets CampaignAsset[]
+  sponsor        Sponsor         @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
 
   @@map("sponsor_assets")
 }
 
 model Placement {
-  id          String @id @default(cuid())
-  key         String @unique // header, hero, sidebar, player_pre, footer
-  ratio       String? // e.g., "16:9", "1:1"
-  maxAssets   Int    @default(1) @map("max_assets")
+  id          String     @id @default(cuid())
+  key         String     @unique
+  ratio       String?
+  maxAssets   Int        @default(1) @map("max_assets")
   description String?
-
-  // Relations
-  campaigns Campaign[]
+  campaigns   Campaign[]
 
   @@map("placements")
 }
 
 model Campaign {
-  id            String    @id @default(cuid())
-  sponsorId     String    @map("sponsor_id")
+  id            String          @id @default(cuid())
+  sponsorId     String          @map("sponsor_id")
   name          String
-  placementId   String    @map("placement_id")
-  startAt       DateTime? @map("start_at")
-  endAt         DateTime? @map("end_at")
-  targetingJson Json      @default("{}") @map("targeting_json")
-  freqCapJson   Json      @default("{}") @map("freq_cap_json")
-  status        String    @default("draft") // draft, active, paused, completed
-
-  // Relations
-  sponsor Sponsor   @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
-  placement Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
-  assets    CampaignAsset[]
+  placementId   String          @map("placement_id")
+  startAt       DateTime?       @map("start_at")
+  endAt         DateTime?       @map("end_at")
+  targetingJson Json            @default("{}") @map("targeting_json")
+  freqCapJson   Json            @default("{}") @map("freq_cap_json")
+  status        String          @default("draft")
+  assets        CampaignAsset[]
+  placement     Placement       @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  sponsor       Sponsor         @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
 
   @@map("campaigns")
 }
 
 model CampaignAsset {
-  id         String @id @default(cuid())
-  campaignId String @map("campaign_id")
-  assetId    String @map("asset_id")
-  weight     Int    @default(100)
-  clickUrl   String @map("click_url")
-  utmJson    Json   @default("{}") @map("utm_json")
-
-  // Relations
-  campaign Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  asset    SponsorAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  id         String       @id @default(cuid())
+  campaignId String       @map("campaign_id")
+  assetId    String       @map("asset_id")
+  weight     Int          @default(100)
+  clickUrl   String       @map("click_url")
+  utmJson    Json         @default("{}") @map("utm_json")
+  asset      SponsorAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  campaign   Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, assetId])
   @@map("campaign_assets")
 }
-
-// Indexes for performance

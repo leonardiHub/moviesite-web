@@ -73,11 +73,25 @@ interface Movie {
     width?: number;
     height?: number;
   }>;
+  sources: Array<{
+    id: string;
+    movieId: string;
+    episodeId?: string;
+    type: string;
+    url: string;
+    quality: string;
+    drmFlag: boolean;
+    regionLimit: string[];
+    isActive: boolean;
+  }>;
   posterUrl?: string;
   posterId?: string;
   videoUrl?: string;
   videoId?: string;
+  videoQuality?: string;
+  videoType?: string;
   trailerUrl?: string;
+  s3Url?: string;
   createdAt: string;
   updatedAt: string;
   _count: {
@@ -204,7 +218,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/countries?page=1&limit=1000&sortBy=name&sortOrder=asc`,
           {
             headers: {
@@ -246,7 +260,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/genres?page=1&limit=1000&sortBy=genreName&sortOrder=asc`,
           {
             headers: {
@@ -289,7 +303,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/tags?page=1&limit=1000&sortBy=tagName&sortOrder=asc`,
           {
             headers: {
@@ -332,7 +346,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/cast?page=1&limit=1000&sortBy=castName&sortOrder=asc`,
           {
             headers: {
@@ -992,14 +1006,51 @@ export default function MovieModal({
                 </div>
               </div>
             </div>
+
+            {movie && (movie.videoUrl || movie.s3Url) && (
+              <div className="bg-white rounded-lg p-4 mt-4">
+                {movie.s3Url && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      S3 URL
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={movie.s3Url}
+                        readOnly
+                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(movie.s3Url || "");
+                          alert("S3 URL copied to clipboard!");
+                        }}
+                        className="px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+                      >
+                        Copy
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => window.open(movie.s3Url, "_blank")}
+                        className="px-3 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600"
+                      >
+                        Open
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Trailer URL */}
+          {/* Video Information */}
           <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              Trailer URL
-            </h4>
             <div className="space-y-4">
+              {/* Current Video URLs (Read-only for existing movies) */}
+
+              {/* Trailer URL Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   YouTube Trailer URL

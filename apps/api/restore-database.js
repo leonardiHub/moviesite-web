@@ -84,10 +84,12 @@ async function restoreDatabase(exportFilePath) {
     console.log("🧹 Clearing existing data...");
     for (const table of clearOrder) {
       try {
-        const count = await prisma[table.toLowerCase()].count();
+        // Convert PascalCase to camelCase for Prisma client
+        const modelName = table.charAt(0).toLowerCase() + table.slice(1);
+        const count = await prisma[modelName].count();
         if (count > 0) {
           console.log(`   Clearing ${table} (${count} records)...`);
-          await prisma[table.toLowerCase()].deleteMany({});
+          await prisma[modelName].deleteMany({});
         }
       } catch (error) {
         console.log(`   ⚠️  Could not clear ${table}: ${error.message}`);
@@ -180,7 +182,9 @@ async function restoreDatabase(exportFilePath) {
 
         // Insert records
         if (cleanRecords.length > 0) {
-          await prisma[table.toLowerCase()].createMany({
+          // Convert PascalCase to camelCase for Prisma client
+          const modelName = table.charAt(0).toLowerCase() + table.slice(1);
+          await prisma[modelName].createMany({
             data: cleanRecords,
             skipDuplicates: true,
           });
@@ -204,7 +208,9 @@ async function restoreDatabase(exportFilePath) {
     const verificationResults = {};
     for (const table of restoreOrder) {
       try {
-        const count = await prisma[table.toLowerCase()].count();
+        // Convert PascalCase to camelCase for Prisma client
+        const modelName = table.charAt(0).toLowerCase() + table.slice(1);
+        const count = await prisma[modelName].count();
         const expectedCount = exportData.data[table]?.length || 0;
         verificationResults[table] = {
           actual: count,
