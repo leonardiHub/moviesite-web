@@ -32,6 +32,7 @@ import {
 } from "@nestjs/swagger";
 
 import { MovieService } from "../content/movie.service";
+import { PrismaService } from "../prisma/prisma.service";
 import { RbacGuard, RequirePermissions } from "../auth/guards/rbac.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuditService } from "../auth/audit.service";
@@ -58,7 +59,8 @@ import {
 export class AdminMoviesController {
   constructor(
     private movieService: MovieService,
-    private auditService: AuditService
+    private auditService: AuditService,
+    private prisma: PrismaService
   ) {}
 
   @Get()
@@ -93,6 +95,10 @@ export class AdminMoviesController {
     @Query("tagId") tagId?: string,
     @Query("castId") castId?: string,
     @Query("countryId") countryId?: string,
+    @Query("genreName") genreName?: string,
+    @Query("tagName") tagName?: string,
+    @Query("countryName") countryName?: string,
+    @Query("countryCode") countryCode?: string,
     @Query("genres") genres?: string, // Comma-separated genre IDs
     @Query("tags") tags?: string, // Comma-separated tag IDs
     @Query("casts") casts?: string, // Comma-separated cast IDs
@@ -112,6 +118,38 @@ export class AdminMoviesController {
     const countryIds = countries
       ? countries.split(",").filter((id) => id.trim())
       : [];
+
+    // Resolve name/code-based filters into IDs if provided
+    if (!genreId && genreName) {
+      try {
+        const g = await this.prisma.genre.findUnique({
+          where: { name: genreName },
+        });
+        if (g) genreId = g.id;
+      } catch {}
+    }
+
+    if (!tagId && tagName) {
+      try {
+        const t = await this.prisma.tag.findUnique({
+          where: { name: tagName },
+        });
+        if (t) tagId = t.id;
+      } catch {}
+    }
+
+    if (!countryId && (countryCode || countryName)) {
+      try {
+        const c = countryCode
+          ? await this.prisma.country.findUnique({
+              where: { code: countryCode },
+            })
+          : await this.prisma.country.findFirst({
+              where: { name: countryName },
+            });
+        if (c) countryId = c.id;
+      } catch {}
+    }
 
     return this.movieService.findAll({
       search,
@@ -160,6 +198,7 @@ export class AdminMoviesController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: "poster", maxCount: 1 },
+      { name: "logo", maxCount: 1 },
       { name: "videoFile", maxCount: 1 },
     ])
   )
@@ -173,6 +212,8 @@ export class AdminMoviesController {
     @UploadedFiles()
     files: {
       poster?: Express.Multer.File[];
+      movieLogo?: Express.Multer.File[]; // backward compatibility if client sends movieLogo
+      logo?: Express.Multer.File[];
       videoFile?: Express.Multer.File[];
     },
     @CurrentUser("userId") userId?: string
@@ -210,6 +251,10 @@ export class AdminMoviesController {
     if (files?.poster && files.poster[0]) {
       createMovieDto.posterFile = files.poster[0];
     }
+    const logoInput = files?.logo?.[0] || files?.movieLogo?.[0];
+    if (logoInput) {
+      createMovieDto.logoFile = logoInput;
+    }
 
     // Video file is required
     if (!files?.videoFile || !files.videoFile[0]) {
@@ -230,6 +275,7 @@ export class AdminMoviesController {
         title: result.title,
         hasPoster: !!(files?.poster && files.poster[0]),
         hasVideo: !!(files?.videoFile && files.videoFile[0]),
+        hasLogo: !!(files?.logo && files.logo[0]),
       },
     });
 
@@ -245,6 +291,7 @@ export class AdminMoviesController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: "poster", maxCount: 1 },
+      { name: "logo", maxCount: 1 },
       { name: "videoFile", maxCount: 1 },
     ])
   )
@@ -259,6 +306,8 @@ export class AdminMoviesController {
     @UploadedFiles()
     files: {
       poster?: Express.Multer.File[];
+      movieLogo?: Express.Multer.File[];
+      logo?: Express.Multer.File[];
       videoFile?: Express.Multer.File[];
     },
     @CurrentUser("userId") userId?: string
@@ -296,6 +345,10 @@ export class AdminMoviesController {
     if (files?.poster && files.poster[0]) {
       updateMovieDto.posterFile = files.poster[0];
     }
+    const logoInput2 = files?.logo?.[0] || files?.movieLogo?.[0];
+    if (logoInput2) {
+      updateMovieDto.logoFile = logoInput2;
+    }
     if (files?.videoFile && files.videoFile[0]) {
       updateMovieDto.videoFile = files.videoFile[0];
     }
@@ -311,6 +364,7 @@ export class AdminMoviesController {
         ...updateMovieDto,
         hasPoster: !!(files?.poster && files.poster[0]),
         hasVideo: !!(files?.videoFile && files.videoFile[0]),
+        hasLogo: !!(files?.logo && files.logo[0]),
       },
     });
 
@@ -444,6 +498,73 @@ export class AdminMoviesController {
     await this.auditService.log({
       adminUserId: userId,
       action: "delete_movie_poster",
+      targetType: "Movie",
+      targetId: movieId,
+    });
+
+    return result;
+  }
+
+  // ==================== MOVIE LOGO MANAGEMENT ====================
+  @Post(":id/logo/upload")
+  @RequirePermissions(PERMISSIONS.CONTENT_MOVIES_UPDATE)
+  @ApiOperation({ summary: "Upload movie logo directly (Admin)" })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("logo"))
+  async uploadMovieLogo(
+    @Param("id") movieId: string,
+    @UploadedFile() logoFile: Express.Multer.File,
+    @CurrentUser("userId") userId: string
+  ) {
+    const result = await this.movieService.uploadMovieLogo(movieId, logoFile);
+
+    await this.auditService.log({
+      adminUserId: userId,
+      action: "upload_movie_logo",
+      targetType: "Movie",
+      targetId: movieId,
+      diffJson: { logoFile: logoFile.originalname },
+    });
+
+    return result;
+  }
+
+  @Put(":id/logo/url")
+  @RequirePermissions(PERMISSIONS.CONTENT_MOVIES_UPDATE)
+  @ApiOperation({ summary: "Update movie logo URL (Admin)" })
+  async updateMovieLogoUrl(
+    @Param("id") movieId: string,
+    @Body() data: { logoUrl: string },
+    @CurrentUser("userId") userId: string
+  ) {
+    const result = await this.movieService.updateMovieLogoUrl(
+      movieId,
+      data.logoUrl
+    );
+
+    await this.auditService.log({
+      adminUserId: userId,
+      action: "update_movie_logo_url",
+      targetType: "Movie",
+      targetId: movieId,
+      diffJson: { logoUrl: data.logoUrl },
+    });
+
+    return result;
+  }
+
+  @Delete(":id/logo")
+  @RequirePermissions(PERMISSIONS.CONTENT_MOVIES_UPDATE)
+  @ApiOperation({ summary: "Delete movie logo (Admin)" })
+  async deleteMovieLogo(
+    @Param("id") movieId: string,
+    @CurrentUser("userId") userId: string
+  ) {
+    const result = await this.movieService.deleteMovieLogo(movieId);
+
+    await this.auditService.log({
+      adminUserId: userId,
+      action: "delete_movie_logo",
       targetType: "Movie",
       targetId: movieId,
     });

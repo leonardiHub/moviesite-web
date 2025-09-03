@@ -77,6 +77,10 @@ export class MoviesController {
       tagId?: string;
       castId?: string;
       countryId?: string;
+      genreName?: string;
+      tagName?: string;
+      countryCode?: string;
+      countryName?: string;
     }
   ) {
     const page = Number(q.page ?? 1);
@@ -86,8 +90,72 @@ export class MoviesController {
       year: "year",
       title: "title",
       popular: "updatedAt",
+      banner: "updatedAt",
     };
     const sortBy = sortMap[q.sort || "popular"] || "updatedAt";
+
+    // Workaround: when sort=banner, return movies tagged with code 'BANNER'
+    // Admins can assign the 'BANNER' tag to control this set from the admin panel
+    let effectiveTagId = q.tagId;
+    if (q.sort === "banner" && !effectiveTagId) {
+      try {
+        // lazy import to avoid circulars
+        const prismaModule = await import("../prisma/prisma.service");
+        const { PrismaService } = prismaModule as any;
+        const prisma = new PrismaService();
+        const bannerTag = await prisma.tag.findFirst({
+          where: { code: "BANNER" },
+        });
+        if (bannerTag) {
+          effectiveTagId = bannerTag.id;
+        }
+      } catch (_) {
+        // ignore and fall back to no tag filter
+      }
+    }
+
+    // Resolve friendly names to IDs if provided
+    let effectiveGenreId = q.genreId;
+    let effectiveCountryId = q.countryId;
+    if (!effectiveTagId || !effectiveGenreId || !effectiveCountryId) {
+      try {
+        const prismaModule = await import("../prisma/prisma.service");
+        const { PrismaService } = prismaModule as any;
+        const prisma = new PrismaService();
+        if (!effectiveTagId && q.tagName) {
+          // Try code first (uppercased), then case-insensitive name match
+          const byCode = await prisma.tag.findUnique({
+            where: { code: q.tagName.toUpperCase() },
+          });
+          if (byCode) {
+            effectiveTagId = byCode.id;
+          } else {
+            const byName = await prisma.tag.findFirst({
+              where: { name: { equals: q.tagName, mode: "insensitive" } },
+            });
+            if (byName) effectiveTagId = byName.id;
+          }
+        }
+        if (!effectiveGenreId && q.genreName) {
+          const g = await prisma.genre.findFirst({
+            where: { name: { equals: q.genreName, mode: "insensitive" } },
+          });
+          if (g) effectiveGenreId = g.id;
+        }
+        if (!effectiveCountryId && (q.countryCode || q.countryName)) {
+          const c = q.countryCode
+            ? await prisma.country.findUnique({
+                where: { code: (q.countryCode || "").toUpperCase() },
+              })
+            : await prisma.country.findFirst({
+                where: {
+                  name: { equals: q.countryName as any, mode: "insensitive" },
+                },
+              });
+          if (c) effectiveCountryId = c.id;
+        }
+      } catch (_) {}
+    }
 
     const result = await this.movieService.findAll({
       status: "published",
@@ -96,10 +164,10 @@ export class MoviesController {
       limit,
       sortBy,
       sortOrder: "desc",
-      genreId: q.genreId,
-      tagId: q.tagId,
+      genreId: effectiveGenreId,
+      tagId: effectiveTagId,
       castId: q.castId,
-      countryId: q.countryId,
+      countryId: effectiveCountryId,
     });
 
     return {
@@ -112,7 +180,9 @@ export class MoviesController {
         runtime: m.runtime ?? null,
         director: m.director ?? null,
         synopsis: m.synopsis ?? null,
+        trailerUrl: m.trailerUrl ?? null,
         poster: m.posterUrl || null,
+        logo: m.logoUrl || null,
         backdrop:
           (m.artworks || []).find((a: any) => a.kind === "backdrop")?.url ||
           null,
@@ -165,6 +235,7 @@ export class MoviesController {
       rating: m.rating ?? null,
       synopsis: m.synopsis,
       poster: m.posterUrl || null,
+      logo: m.logoUrl || null,
       backdrop:
         (m.artworks || []).find((a: any) => a.kind === "backdrop")?.url || null,
       genres: (m.genres || []).map((g: any) => g.genre?.name).filter(Boolean),

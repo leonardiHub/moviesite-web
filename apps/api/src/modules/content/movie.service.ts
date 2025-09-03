@@ -146,7 +146,7 @@ export class MovieService {
             include: { country: true },
           },
           artworks: {
-            where: { kind: { in: ["poster", "backdrop"] } },
+            where: { kind: { in: ["poster", "backdrop", "logo"] } },
           },
           sources: {
             where: { isActive: true },
@@ -169,10 +169,12 @@ export class MovieService {
     // Add poster and video information to each movie
     const enhancedMovies = movies.map((movie) => {
       const poster = movie.artworks.find((a) => a.kind === "poster");
+      const logo = movie.artworks.find((a) => a.kind === "logo");
       const videoSource = movie.sources[0]; // First active source
 
       // Convert S3 key to direct S3 URL or image endpoint URL if poster exists
       let posterUrl = poster?.url;
+      let logoUrl = logo?.url;
       if (posterUrl && !posterUrl.startsWith("http")) {
         const s3Bucket = this.configService.get("S3_BUCKET_NAME");
         const s3Region = this.configService.get("S3_REGION", "us-east-1");
@@ -194,6 +196,27 @@ export class MovieService {
             posterUrl = `${baseUrl}/v1/images/${encodeURIComponent(posterUrl)}`;
           } else {
             posterUrl = `${baseUrl}/v1/images/poster/${encodeURIComponent(posterUrl)}`;
+          }
+        }
+      }
+
+      if (logoUrl && !logoUrl.startsWith("http")) {
+        const s3Bucket = this.configService.get("S3_BUCKET_NAME");
+        const s3Region = this.configService.get("S3_REGION", "us-east-1");
+        const useDirectS3 =
+          this.configService.get("USE_DIRECT_S3_URLS", "false") === "true";
+
+        if (useDirectS3 && s3Bucket) {
+          logoUrl = `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${logoUrl}`;
+        } else {
+          const baseUrl = this.configService.get(
+            "PUBLIC_BASE_URL",
+            "http://51.79.254.237:4000"
+          );
+          if (logoUrl.includes("/")) {
+            logoUrl = `${baseUrl}/v1/images/${encodeURIComponent(logoUrl)}`;
+          } else {
+            logoUrl = `${baseUrl}/v1/images/logo/${encodeURIComponent(logoUrl)}`;
           }
         }
       }
@@ -235,6 +258,8 @@ export class MovieService {
         ...movie,
         posterUrl,
         posterId: poster?.id,
+        logoUrl,
+        logoId: logo?.id,
         videoUrl: videoUrl || null,
         videoId: videoSource?.id || null,
         videoQuality: videoSource?.quality || null,
@@ -291,10 +316,12 @@ export class MovieService {
 
     // Add poster and video information
     const poster = movie.artworks.find((a) => a.kind === "poster");
+    const logo = movie.artworks.find((a) => a.kind === "logo");
     const videoSource = movie.sources[0]; // First active source
 
     // Convert S3 key to direct S3 URL or image endpoint URL if poster exists
     let posterUrl = poster?.url;
+    let logoUrl = logo?.url;
     if (posterUrl && !posterUrl.startsWith("http")) {
       const s3Bucket = this.configService.get("S3_BUCKET_NAME");
       const s3Region = this.configService.get("S3_REGION", "us-east-1");
@@ -316,6 +343,27 @@ export class MovieService {
           posterUrl = `${baseUrl}/v1/images/${encodeURIComponent(posterUrl)}`;
         } else {
           posterUrl = `${baseUrl}/v1/images/poster/${encodeURIComponent(posterUrl)}`;
+        }
+      }
+    }
+
+    if (logoUrl && !logoUrl.startsWith("http")) {
+      const s3Bucket = this.configService.get("S3_BUCKET_NAME");
+      const s3Region = this.configService.get("S3_REGION", "us-east-1");
+      const useDirectS3 =
+        this.configService.get("USE_DIRECT_S3_URLS", "false") === "true";
+
+      if (useDirectS3 && s3Bucket) {
+        logoUrl = `https://${s3Bucket}.s3.${s3Region}.amazonaws.com/${logoUrl}`;
+      } else {
+        const baseUrl = this.configService.get(
+          "PUBLIC_BASE_URL",
+          "http://51.79.254.237:4000"
+        );
+        if (logoUrl.includes("/")) {
+          logoUrl = `${baseUrl}/v1/images/${encodeURIComponent(logoUrl)}`;
+        } else {
+          logoUrl = `${baseUrl}/v1/images/logo/${encodeURIComponent(logoUrl)}`;
         }
       }
     }
@@ -357,6 +405,8 @@ export class MovieService {
       ...movie,
       posterUrl,
       posterId: poster?.id,
+      logoUrl,
+      logoId: logo?.id,
       videoUrl,
       videoId: videoSource?.id,
       videoQuality: videoSource?.quality,
@@ -383,6 +433,8 @@ export class MovieService {
 
       posterFile,
       posterUrl,
+      logoFile,
+      logoUrl,
       videoFile,
       videoUrl,
       trailerUrl,
@@ -392,6 +444,7 @@ export class MovieService {
     // Remove posterUrl from movieData since it's not a database field
     // posterUrl is only used for poster file handling, not for movie data updates
     delete (movieData as any).posterUrl;
+    delete (movieData as any).logoUrl;
 
     // Filter out invalid credits (personId must exist in database)
     let validCredits = undefined;
@@ -475,6 +528,13 @@ export class MovieService {
       await this.updateMoviePosterUrl(movie.id, posterUrl);
     }
 
+    // Handle logo upload if provided
+    if (logoFile) {
+      await this.uploadMovieLogo(movie.id, logoFile);
+    } else if (logoUrl) {
+      await this.updateMovieLogoUrl(movie.id, logoUrl);
+    }
+
     // Handle video upload if provided
     if (videoFile) {
       await this.uploadMovieVideo(movie.id, videoFile);
@@ -510,6 +570,8 @@ export class MovieService {
 
       posterFile,
       posterUrl,
+      logoFile,
+      logoUrl,
       videoFile,
       videoUrl,
       trailerUrl,
@@ -519,6 +581,7 @@ export class MovieService {
     // Remove posterUrl from movieData since it's not a database field
     // posterUrl is only used for poster file handling, not for movie data updates
     delete (movieData as any).posterUrl;
+    delete (movieData as any).logoUrl;
 
     // Check if movie exists
     const existingMovie = await this.prisma.movie.findUnique({
@@ -619,6 +682,12 @@ export class MovieService {
       await this.updateMoviePoster(id, posterFile);
     } else if (posterUrl) {
       await this.updateMoviePosterUrl(id, posterUrl);
+    }
+
+    if (logoFile) {
+      await this.updateMovieLogo(id, logoFile);
+    } else if (logoUrl) {
+      await this.updateMovieLogoUrl(id, logoUrl);
     }
 
     // Handle video update if provided
@@ -1053,6 +1122,102 @@ export class MovieService {
       await this.prisma.artwork.delete({
         where: { id: poster.id },
       });
+    }
+
+    return { success: true };
+  }
+
+  // Logo-specific methods
+  async uploadMovieLogo(movieId: string, logoFile: Express.Multer.File) {
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+    if (!movie) {
+      throw new NotFoundException(`Movie with ID ${movieId} not found`);
+    }
+
+    if (!logoFile || !logoFile.originalname) {
+      throw new BadRequestException("Invalid logo file");
+    }
+    const key = this.storage.generatePath("logo", logoFile.originalname);
+    await this.storage.uploadFile(key, logoFile.buffer, logoFile.mimetype);
+
+    const existingLogo = await this.prisma.artwork.findFirst({
+      where: { movieId, kind: "logo" },
+    });
+
+    if (existingLogo) {
+      if (existingLogo.url) {
+        try {
+          await this.storage.deleteFile(existingLogo.url);
+        } catch (error) {
+          console.error("Failed to delete old logo from S3:", error);
+        }
+      }
+      await this.prisma.artwork.update({
+        where: { id: existingLogo.id },
+        data: { url: key },
+      });
+    } else {
+      await this.prisma.artwork.create({
+        data: { movieId, kind: "logo", url: key },
+      });
+    }
+
+    return { success: true, logoUrl: key };
+  }
+
+  async updateMovieLogo(movieId: string, logoFile: Express.Multer.File) {
+    return this.uploadMovieLogo(movieId, logoFile);
+  }
+
+  async updateMovieLogoUrl(movieId: string, logoUrl: string) {
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+    if (!movie) {
+      throw new NotFoundException(`Movie with ID ${movieId} not found`);
+    }
+
+    const existingLogo = await this.prisma.artwork.findFirst({
+      where: { movieId, kind: "logo" },
+    });
+
+    if (existingLogo) {
+      await this.prisma.artwork.update({
+        where: { id: existingLogo.id },
+        data: { url: logoUrl },
+      });
+    } else {
+      await this.prisma.artwork.create({
+        data: { movieId, kind: "logo", url: logoUrl },
+      });
+    }
+
+    return { success: true, logoUrl };
+  }
+
+  async deleteMovieLogo(movieId: string) {
+    const movie = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+    });
+    if (!movie) {
+      throw new NotFoundException(`Movie with ID ${movieId} not found`);
+    }
+
+    const logo = await this.prisma.artwork.findFirst({
+      where: { movieId, kind: "logo" },
+    });
+
+    if (logo) {
+      if (logo.url && !logo.url.startsWith("http")) {
+        try {
+          await this.storage.deleteFile(logo.url);
+        } catch (error) {
+          console.error("Failed to delete logo from S3:", error);
+        }
+      }
+      await this.prisma.artwork.delete({ where: { id: logo.id } });
     }
 
     return { success: true };

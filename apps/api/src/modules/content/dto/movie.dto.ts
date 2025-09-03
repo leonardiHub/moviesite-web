@@ -107,6 +107,14 @@ export class CreateMovieDto {
   @IsOptional()
   posterUrl?: string;
 
+  @ApiPropertyOptional({ description: "Logo image file (for upload)" })
+  @IsOptional()
+  logoFile?: Express.Multer.File;
+
+  @ApiPropertyOptional({ description: "Logo URL (if already uploaded)" })
+  @IsOptional()
+  logoUrl?: string;
+
   @ApiPropertyOptional({ description: "Video file (for upload)" })
   @IsOptional()
   videoFile?: Express.Multer.File;
@@ -209,6 +217,14 @@ export class UpdateMovieDto {
   @IsOptional()
   posterUrl?: string;
 
+  @ApiPropertyOptional({ description: "Logo image file (for upload)" })
+  @IsOptional()
+  logoFile?: Express.Multer.File;
+
+  @ApiPropertyOptional({ description: "Logo URL (if already uploaded)" })
+  @IsOptional()
+  logoUrl?: string;
+
   @ApiPropertyOptional({ description: "Video file (for upload)" })
   @IsOptional()
   videoFile?: Express.Multer.File;
@@ -286,6 +302,12 @@ export class MovieResponseDto {
 
   @ApiPropertyOptional({ description: "Primary poster artwork ID" })
   posterId?: string;
+
+  @ApiPropertyOptional({ description: "Primary logo URL" })
+  logoUrl?: string;
+
+  @ApiPropertyOptional({ description: "Primary logo artwork ID" })
+  logoId?: string;
 
   @ApiPropertyOptional({ description: "Video URL (API endpoint)" })
   videoUrl?: string;

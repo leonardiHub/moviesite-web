@@ -6,6 +6,7 @@ export enum ArtworkKind {
   BACKDROP = "backdrop",
   SPRITE = "sprite",
   THUMBNAIL = "thumbnail",
+  LOGO = "logo",
 }
 
 export class CreateArtworkDto {

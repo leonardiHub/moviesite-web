@@ -14,7 +14,7 @@ configureHttp({
 });
 
 // Components
-import EZMovieHome from "./components/home/index";
+import EZMovieHome from "./components/homev2/index";
 
 import ForeignMovies from "./components/catalog/ForeignMovies";
 import MoviePlayer from "./components/movie/MoviePlayer";

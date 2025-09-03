@@ -86,6 +86,8 @@ interface Movie {
   }>;
   posterUrl?: string;
   posterId?: string;
+  logoUrl?: string;
+  logoId?: string;
   videoUrl?: string;
   videoId?: string;
   videoQuality?: string;
@@ -116,6 +118,8 @@ interface CreateMovieData {
   tagIds?: string[];
   posterFile?: File;
   posterUrl?: string;
+  logoFile?: File;
+  logoUrl?: string;
   videoFile?: File;
   trailerUrl?: string;
 }
@@ -128,19 +132,7 @@ interface MovieModalProps {
   onSave: (movie: CreateMovieData) => void;
 }
 
-const availableAgeRatings = [
-  "G",
-  "PG",
-  "PG-13",
-  "R",
-  "NC-17",
-  "TV-Y",
-  "TV-Y7",
-  "TV-G",
-  "TV-PG",
-  "TV-14",
-  "TV-MA",
-];
+const availableAgeRatings = ["7+", "13+", "15+", "18+"];
 
 // Helper function to extract YouTube video ID from URL
 const extractYouTubeId = (url: string): string | null => {
@@ -197,6 +189,8 @@ export default function MovieModal({
     null
   );
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
 
@@ -421,12 +415,22 @@ export default function MovieModal({
           isValidUrl(movie.posterUrl)
             ? movie.posterUrl
             : undefined,
+        logoUrl:
+          movie.logoUrl &&
+          movie.logoUrl.trim() !== "" &&
+          isValidUrl(movie.logoUrl)
+            ? movie.logoUrl
+            : undefined,
         trailerUrl: movie.trailerUrl || "",
       });
 
       // Set poster preview if movie has poster
       if (movie.posterUrl) {
         setPosterPreview(movie.posterUrl);
+      }
+
+      if (movie.logoUrl) {
+        setLogoPreview(movie.logoUrl);
       }
 
       // Set video preview for existing videos
@@ -458,6 +462,8 @@ export default function MovieModal({
       });
       setPosterPreview(null);
       setSelectedPosterFile(null);
+      setLogoPreview(null);
+      setSelectedLogoFile(null);
     }
   }, [movie, mode, countries]);
 
@@ -563,6 +569,23 @@ export default function MovieModal({
     setPosterPreview(null);
   };
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedLogoFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = () => {
+    setSelectedLogoFile(null);
+    setLogoPreview(null);
+  };
+
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -624,6 +647,14 @@ export default function MovieModal({
       !isValidUrl(formData.posterUrl)
         ? {}
         : { posterUrl: formData.posterUrl }),
+      logoFile: selectedLogoFile || undefined,
+      // Only include logoUrl if there's no new logo file and logoUrl exists and is a valid URL
+      ...(selectedLogoFile ||
+      !formData.logoUrl ||
+      formData.logoUrl.trim() === "" ||
+      !isValidUrl(formData.logoUrl)
+        ? {}
+        : { logoUrl: formData.logoUrl }),
       videoFile: selectedVideoFile || undefined,
       trailerUrl: formData.trailerUrl || undefined,
     };
@@ -642,6 +673,16 @@ export default function MovieModal({
         !isValidUrl(formData.posterUrl)
           ? undefined
           : formData.posterUrl,
+      hasLogoFile: !!selectedLogoFile,
+      logoUrl: formData.logoUrl,
+      logoUrlValid: formData.logoUrl ? isValidUrl(formData.logoUrl) : false,
+      finalLogoUrl:
+        selectedLogoFile ||
+        !formData.logoUrl ||
+        formData.logoUrl.trim() === "" ||
+        !isValidUrl(formData.logoUrl)
+          ? undefined
+          : formData.logoUrl,
       trailerUrl: formData.trailerUrl,
       submitData,
     });
@@ -874,6 +915,73 @@ export default function MovieModal({
                   </p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Logo Upload (Optional) */}
+          <div className="bg-gray-50 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+              Movie Logo (optional)
+            </h4>
+            <div className="flex items-center gap-6">
+              {logoPreview && (
+                <div className="flex items-center gap-4">
+                  <img
+                    src={logoPreview}
+                    alt="Logo preview"
+                    className="w-20 h-20 object-contain rounded-lg border-2 border-gray-200 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeLogo}
+                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="hidden"
+                  id="logo-upload"
+                />
+                <label
+                  htmlFor="logo-upload"
+                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                >
+                  <PhotoIcon className="w-5 h-5 text-gray-500" />
+                  <span className="font-medium text-gray-700">
+                    {logoPreview ? "Change Logo" : "Upload Logo"}
+                  </span>
+                </label>
+                {!logoPreview && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Recommended: transparent PNG/SVG
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Logo URL (optional)
+              </label>
+              <input
+                type="url"
+                value={formData.logoUrl || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, logoUrl: e.target.value }))
+                }
+                placeholder="https://..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                If provided and no new logo file is uploaded, this URL will be
+                used.
+              </p>
             </div>
           </div>
 

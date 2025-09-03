@@ -113,6 +113,9 @@ interface CreateMovieData {
   genreIds?: string[];
   tagIds?: string[];
   posterFile?: File; // Added for file upload
+  logoFile?: File;
+  posterUrl?: string;
+  logoUrl?: string;
   videoFile?: File; // Added for video file upload
   videoUrl?: string;
   videoQuality?: string;
@@ -131,6 +134,23 @@ export default function MoviesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [yearFilter, setYearFilter] = useState<string>("");
+  const [selectedGenreId, setSelectedGenreId] = useState<string>("");
+  const [selectedTagId, setSelectedTagId] = useState<string>("");
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("");
+  const [selectedCastId, setSelectedCastId] = useState<string>("");
+
+  const [availableGenres, setAvailableGenres] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [availableTags, setAvailableTags] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [availableCountries, setAvailableCountries] = useState<
+    Array<{ id: string; name: string; code: string }>
+  >([]);
+  const [availableCast, setAvailableCast] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -167,6 +187,10 @@ export default function MoviesPage() {
         ...(searchTerm && { search: searchTerm }),
         ...(statusFilter && { status: statusFilter }),
         ...(yearFilter && { year: yearFilter }),
+        ...(selectedGenreId && { genreId: selectedGenreId }),
+        ...(selectedTagId && { tagId: selectedTagId }),
+        ...(selectedCountryId && { countryId: selectedCountryId }),
+        ...(selectedCastId && { castId: selectedCastId }),
       });
 
       const response = await fetch(`${API_BASE}/admin/movies?${params}`, {
@@ -193,12 +217,70 @@ export default function MoviesPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, statusFilter, yearFilter]);
+  }, [
+    currentPage,
+    searchTerm,
+    statusFilter,
+    yearFilter,
+    selectedGenreId,
+    selectedTagId,
+    selectedCountryId,
+    selectedCastId,
+  ]);
 
   // Load movies on component mount and when filters change
   useEffect(() => {
     fetchMovies();
   }, [fetchMovies]);
+
+  // Fetch options for filters once
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const token = getAuthToken();
+        if (!token) return;
+        const headers = { Authorization: `Bearer ${token}` } as any;
+        const [g, t, c, s] = await Promise.all([
+          fetch(
+            `${API_BASE}/admin/genres?page=1&limit=1000&sortBy=genreName&sortOrder=asc`,
+            { headers }
+          ),
+          fetch(
+            `${API_BASE}/admin/tags?page=1&limit=1000&sortBy=tagName&sortOrder=asc`,
+            { headers }
+          ),
+          fetch(
+            `${API_BASE}/admin/countries?page=1&limit=1000&sortBy=name&sortOrder=asc`,
+            { headers }
+          ),
+          fetch(
+            `${API_BASE}/admin/cast?page=1&limit=1000&sortBy=castName&sortOrder=asc`,
+            { headers }
+          ),
+        ]);
+        if (g.ok) {
+          const j = await g.json();
+          setAvailableGenres(j.items || []);
+        }
+        if (t.ok) {
+          const j = await t.json();
+          setAvailableTags(j.items || []);
+        }
+        if (c.ok) {
+          const j = await c.json();
+          setAvailableCountries(j.items || []);
+        }
+        if (s.ok) {
+          const j = await s.json();
+          setAvailableCast(j.items || []);
+        }
+      } catch (_) {
+        // ignore
+      }
+    };
+    fetchOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Create new movie
   const handleCreateMovie = async (movieData: CreateMovieData) => {
@@ -217,6 +299,12 @@ export default function MoviesPage() {
         formData.append("poster", movieData.posterFile);
       }
 
+      // Add the logo file if provided
+      if (movieData.logoFile) {
+        // support both keys if backend expects either
+        formData.append("logo", movieData.logoFile);
+      }
+
       // Add the video file if provided
       if (movieData.videoFile) {
         formData.append("videoFile", movieData.videoFile);
@@ -224,7 +312,8 @@ export default function MoviesPage() {
 
       // Add the movie data as JSON string to preserve arrays and types
       // Remove file objects when there are new files
-      const { posterFile, videoFile, ...dataWithoutFiles } = movieData;
+      const { posterFile, logoFile, videoFile, ...dataWithoutFiles } =
+        movieData;
       formData.append("movieData", JSON.stringify(dataWithoutFiles));
 
       const response = await fetch(`${API_BASE}/admin/movies`, {
@@ -274,6 +363,11 @@ export default function MoviesPage() {
         formData.append("poster", movieData.posterFile);
       }
 
+      // Add the logo file if provided
+      if (movieData.logoFile) {
+        formData.append("logo", movieData.logoFile);
+      }
+
       // Add the video file if provided
       if (movieData.videoFile) {
         formData.append("videoFile", movieData.videoFile);
@@ -281,7 +375,8 @@ export default function MoviesPage() {
 
       // Add the movie data as JSON string to preserve arrays and types
       // Remove file objects when there are new files
-      const { posterFile, videoFile, ...dataWithoutFiles } = movieData;
+      const { posterFile, logoFile, videoFile, ...dataWithoutFiles } =
+        movieData;
       formData.append("movieData", JSON.stringify(dataWithoutFiles));
 
       const response = await fetch(
@@ -386,6 +481,10 @@ export default function MoviesPage() {
     setStatusFilter("");
     setYearFilter("");
     setCurrentPage(1);
+    setSelectedGenreId("");
+    setSelectedTagId("");
+    setSelectedCountryId("");
+    setSelectedCastId("");
   };
 
   // Format date
@@ -554,6 +653,78 @@ export default function MoviesPage() {
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>
+              </div>
+              {/* Genres */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Genres
+                </label>
+                <select
+                  value={selectedGenreId}
+                  onChange={(e) => setSelectedGenreId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                >
+                  <option value="">All genres</option>
+                  {availableGenres.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Tags */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tags
+                </label>
+                <select
+                  value={selectedTagId}
+                  onChange={(e) => setSelectedTagId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                >
+                  <option value="">All tags</option>
+                  {availableTags.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Countries */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Countries
+                </label>
+                <select
+                  value={selectedCountryId}
+                  onChange={(e) => setSelectedCountryId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                >
+                  <option value="">All countries</option>
+                  {availableCountries.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Cast */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cast
+                </label>
+                <select
+                  value={selectedCastId}
+                  onChange={(e) => setSelectedCastId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                >
+                  <option value="">All cast</option>
+                  {availableCast.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </form>
@@ -951,7 +1122,7 @@ export default function MoviesPage() {
       <MovieModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        movie={selectedMovie}
+        movie={selectedMovie as any}
         mode="edit"
         onSave={handleEditMovie}
       />

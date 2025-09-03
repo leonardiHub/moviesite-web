@@ -4,11 +4,6 @@ import React, { useState, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import SponsorMenu from "./menu";
-import {
-  useHomeData,
-  useBrandConfig,
-  useSponsorPlacements,
-} from "../../hooks/useMovies";
 // removed react-slick & slick css (no longer used)
 
 type Movie = {
@@ -26,54 +21,21 @@ type Movie = {
   ageRating?: "13+" | "15+" | "16+" | "18+"; // 新增年龄分级
 };
 
-// Hero轮播数据 - 匹配原版截图
-const heroSlides: Movie[] = [
-  {
-    id: "hero-1",
-    title: "ปุกเกิด ตีหมื่น",
-    posterUrl:
-      "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-    backdropUrl:
-      "https://image.tmdb.org/t/p/w1920/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg",
-    logoUrl:
-      "https://ezmovie.me/media/cache/strip/202304/block/dc02782fcfc5ee44bc9682d82e489b0f.png",
-    description:
-      "อดีตยอดนักสู้ชาวไทย หมาก ปรีชา ต้องอาศัยทักษะการต่อสู้เหนือคน ความจงรักภักดี และจิตใจเหล็กเพื่อการต่อสู้เพื่อเอาชีวิตรอดจากฝูงซอมบี้นับร้อย",
-  },
-  {
-    id: "hero-2",
-    title: "Transformers One",
-    posterUrl:
-      "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-    backdropUrl:
-      "https://image.tmdb.org/t/p/w1920/uMXVeVL2v57lMv6pqBmegDHHPqz.jpg",
-    logoUrl:
-      "https://ezmovie.me/media/cache/strip/202304/block/dc02782fcfc5ee44bc9682d82e489b0f.png",
-    description:
-      "การผจญภัยครั้งใหม่ของ Optimus Prime และ Megatron ที่เจาะลึกถึงต้นกำเนิดและมิตรภาพที่กลายเป็นศัตรูกันในดาวไซเบอร์ตรอน",
-  },
-  {
-    id: "hero-3",
-    title: "The Wild Robot",
-    posterUrl:
-      "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-    backdropUrl:
-      "https://image.tmdb.org/t/p/w1920/59AJ2w9iRIQGdJEjZgWuvRZgbhC.jpg",
-    logoUrl:
-      "https://ezmovie.me/media/cache/strip/202304/block/dc02782fcfc5ee44bc9682d82e489b0f.png",
-    description:
-      "หุ่นยนต์ที่ติดอยู่บนเกาะร้างได้เรียนรู้ที่จะปรับตัวกับสภาพแวดล้อมที่รุนแรงและค่อยๆ สร้างความสัมพันธ์กับสัตว์ต่างๆ บนเกาะ",
-  },
-  {
-    id: "hero-4",
-    title: "Feature Banner",
-    posterUrl:
-      "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-    backdropUrl:
-      "https://ezmovie.me/media/cache/strip/202304/block/d1de324d5ff8f92bb4042df52b645523.jpg",
-    description: "อัปเดตแบนเนอร์ใหม่ตามที่ขอ เพิ่มภาพพื้นหลังสำหรับสไลด์พิเศษ",
-  },
-];
+// Asset urls
+const hdIconUrl = new URL("../../images/hd-icon.png", import.meta.url).href;
+
+// Format runtime minutes to English: examples -> "2hours", "1hour 30 minutes", "45 minutes"
+const formatRuntime = (totalMinutes?: number): string | undefined => {
+  if (typeof totalMinutes !== "number" || totalMinutes <= 0) return undefined;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0 && minutes === 0) {
+    return `${hours}${hours === 1 ? "hour" : "hours"}`; // no space per request
+  }
+  const h = hours > 0 ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "";
+  const m = `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  return h ? `${h} ${m}` : m;
+};
 
 // Featured movie data
 const defaultFeatured: Movie = {
@@ -484,37 +446,36 @@ const css = `
   border-radius: 10px;
   margin: 2px;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, 
-    rgba(35, 35, 47, 0.8) 0%, 
-    rgba(50, 50, 65, 0.9) 50%, 
+  background: linear-gradient(45deg,
+    rgba(35, 35, 47, 0.8) 0%,
+    rgba(50, 50, 65, 0.9) 50%,
     rgba(35, 35, 47, 0.8) 100%);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
   transition: all 0.3s ease;
-  box-shadow: 
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, 
-    rgba(45, 45, 60, 0.9) 0%, 
-    rgba(65, 65, 85, 1) 50%, 
+  background: linear-gradient(45deg,
+    rgba(45, 45, 60, 0.9) 0%,
+    rgba(65, 65, 85, 1) 50%,
     rgba(45, 45, 60, 0.9) 100%);
-  box-shadow: 
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(45deg, 
-    rgba(229, 9, 20, 0.6) 0%, 
-    rgba(255, 26, 37, 0.7) 50%, 
+  background: linear-gradient(45deg,
+    rgba(229, 9, 20, 0.6) 0%,
+    rgba(255, 26, 37, 0.7) 50%,
     rgba(229, 9, 20, 0.6) 100%);
-  box-shadow: 
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
     0 2px 6px rgba(229, 9, 20, 0.3);
 }
@@ -529,18 +490,18 @@ const css = `
   scrollbar-color: rgba(35, 35, 47, 0.8) rgba(0, 0, 0, 0.1);
 }
 
-:root { 
-  --bg: #0b0d12; 
-  --panel: #12141b; 
-  --text: #e6e8ee; 
-  --muted: #9aa3b2; 
-  --primary: #e50914; 
+:root {
+  --bg: #0b0d12;
+  --panel: #12141b;
+  --text: #e6e8ee;
+  --muted: #9aa3b2;
+  --primary: #e50914;
   --outline: rgba(255,255,255,.12);
   --container-max: 100vw;     /* 完全全宽布局 */
   --container-pad: 60px;      /* 恢复内边距用于内容区域 */
   --header-h: 64px;
   --hero-h: 620px;
-  
+
   /* GPU优化滑块样式 */
   --gap: 15px;
   --card-w: 200px;  /* 稍微大一点的小卡片宽度 */
@@ -575,6 +536,7 @@ const css = `
     border: none !important;       /* 删除边框 */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     cursor: pointer !important;
+    position: relative !important; /* ensure overlay/title positioning */
   }
 }
 
@@ -591,6 +553,39 @@ const css = `
     object-fit: cover !important;
     transition: transform 0.3s ease !important;
   }
+
+  /* Desktop: dark overlay and title on hover */
+  .ezm-smallMovieCard::after{
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,0) !important;
+    transition: background .2s ease !important;
+    pointer-events: none !important;
+  }
+
+  .ezm-smallMovieCard:hover::after{
+    background: rgba(0,0,0,0.28) !important;
+  }
+
+  .ezm-smallMovieCard .movie-title{
+    position: absolute !important;
+    left: 0 !important; right: 0 !important; bottom: 0 !important;
+    padding: 6px 8px !important;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9)) !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    font-weight: 600 !important;
+    opacity: 0 !important;
+    transition: opacity .2s ease !important;
+    z-index: 1 !important;
+  }
+
+  .ezm-smallMovieCard:hover .movie-title{ opacity: 1 !important; }
 }
 
 /* === 替换：右侧滚动区域的"渐隐边缘"——用覆盖层替代 mask，减掉合成开销 === */
@@ -653,8 +648,8 @@ const css = `
   padding: 0 0 56px;   /* 完全移除上间距，紧贴上一个区块 */
 }
 
-.x-top5 .-category-inner-container{ 
-  padding: 0 var(--pad-x); 
+.x-top5 .-category-inner-container{
+  padding: 0 var(--pad-x);
   margin-bottom: 16px; /* 默认下方间距 */
 }
 
@@ -747,8 +742,6 @@ html, body, .ezm-pageRoot { max-width:100%; overflow-x:hidden; }
 .x-top10-btn:hover svg{ color:rgba(255,255,255,.98); filter: drop-shadow(0 28px 56px rgba(0,0,0,.92)) drop-shadow(0 14px 24px rgba(0,0,0,.72)); transform:scale(1.25); }
 .x-top10-btn:focus-visible { outline: none; }
 
-
-
 /* 进一步减少栅格内重绘范围，降低卡顿峰值 */
 .x-top5-grid{ contain: layout paint; }
 .x-top10-slide{ backface-visibility: hidden; }
@@ -803,7 +796,6 @@ html, body, .ezm-pageRoot { max-width:100%; overflow-x:hidden; }
   white-space: nowrap;
   backdrop-filter: blur(10px);
 }
-
 .-see-all-link:hover {
   color: #e50914;
   background: rgba(229, 9, 20, 0.12);
@@ -857,7 +849,7 @@ img.img-fluid.-image,
 
 /* 2) 新增"地面接触阴影"：椭圆径向渐变 + 轻微 blur，最自然 */
 .x-top5-pair .x-item-movie{
-  position: relative; 
+  position: relative;
   z-index: 2;
   isolation: isolate;                      /* 确保伪元素只在当前卡片内混合 */
 }
@@ -896,7 +888,6 @@ img.img-fluid.-image,
     0 12px 26px rgba(0,0,0,.22),
     0 2px  4px  rgba(0,0,0,.18);
 }
-
 /* ===== Mobile tidy layout (<= 640px) — cleaner, premium look ===== */
 @media (max-width: 640px) {
   /* Header */
@@ -906,10 +897,10 @@ img.img-fluid.-image,
     --sep-h: 18px;        /* 分隔线高度 */
     --search-nudge: 12px;  /* 搜索图标光学位置微调：正值向右，负值向左 */
   }
-  
+
   .${styles.headerInner} { height: 50px; padding: 0; gap: 0; position: relative; justify-content: space-between; width: 100%; }
   .${styles.header} { padding-top: env(safe-area-inset-top); background: rgba(0,0,0,.45); backdrop-filter: saturate(140%) blur(6px); }
-  
+
   /* 关键：让 brandGroup 横跨整个 header（有 left 也要有 right） */
   .${styles.brandGroup} {
     position: absolute !important;
@@ -938,7 +929,7 @@ img.img-fluid.-image,
     z-index: 10;
   }
   .ezm-logoImg { height: 22px; width: auto; display: block; }
-  
+
   /* 右侧区域改为 5 列网格：ICON | gap | LINE | gap | ICON */
   .${styles.headerActions}{
     position: absolute; right: 0; top: 50%;
@@ -989,11 +980,11 @@ img.img-fluid.-image,
 
   /* Hide sponsor logos on mobile */
   .ezm-sponsorBar { display: none !important; }
-  
+
   /* Hero: reduce noise */
   :root { --hero-h: 44vh; }  /* 再调低整体高度 */
   .${styles.hero} { height: 340px !important; }  /* 继续缩短高度，进一步上移 */
-  .${styles.heroContent} { 
+  .${styles.heroContent} {
     padding: 240px 0 0 !important;  /* 底部留白清零，紧贴下一节 */
     max-width: 100% !important;  /* 允许内容区域使用全宽 */
     text-align: center;  /* 所有内容居中 */
@@ -1001,15 +992,15 @@ img.img-fluid.-image,
     flex-direction: column;
     align-items: center;  /* logo和按钮都居中 */
   }
-  .${styles.heroTitleLogo} { 
+  .${styles.heroTitleLogo} {
     margin: 12px auto 6px !important;  /* 向下移动(上边距12px)并更贴近按钮(下边距6px) */
     width: clamp(180px, 35vw, 480px) !important;  /* 从 220px-640px 缩小到 180px-480px */
     height: clamp(70px, 10vw, 160px) !important;  /* 从 90px-220px 缩小到 70px-160px */
     background-position: center center !important; /* 背景图标志水平垂直居中 */
   }
   .${styles.heroDescription} { display: none; }
-  .${styles.heroActions} { 
-    gap: 10px; 
+  .${styles.heroActions} {
+    gap: 10px;
     flex-direction: row !important;  /* 横向排列 */
     justify-content: center;  /* 按钮组居中 */
     width: 100%;
@@ -1026,14 +1017,14 @@ img.img-fluid.-image,
     flex: 1;  /* 拉伸占满剩余空间 */
     max-width: 160px;  /* 从 180px 减小到 160px */
   }
-  .${styles.ctaButton} { 
+  .${styles.ctaButton} {
     height: 38px !important;  /* 从 44px 减小到 38px */
     font-size: 13px !important;  /* 从 14px 减小到 13px */
-    padding: 0 14px; 
+    padding: 0 14px;
   }
 
   /* Slogan text smaller */
-  .${styles.sloganText} { 
+  .${styles.sloganText} {
     font-size: 12px !important;  /* 改为 12px */
     padding: 0 16px;  /* 添加左右内边距 */
     width: 100% !important;
@@ -1070,97 +1061,97 @@ img.img-fluid.-image,
   .x-top10-nav { display: none; }
   .x-top5 { padding: 0 0 24px; }
   /* 完全消除标题与图片区域之间的垂直间距 */
-  .x-top5 .-category-inner-container{ 
-    margin-bottom: 0; 
-    padding-left: var(--pad-x); 
-    padding-right: var(--pad-x); 
+  .x-top5 .-category-inner-container{
+    margin-bottom: 0;
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
   }
   /* 手机端：10个连续横向滚动，保持电脑版数字+图片排版 */
   .x-top10-mobileScroll{ display:block; }
-  .x-top10-mobileScroll { 
-    display: block; 
-    overflow-x: auto; 
-    overflow-y: hidden; 
-    -webkit-overflow-scrolling: touch; 
-    padding: 0 0 12px; 
-    margin: -20px 0 0; 
+  .x-top10-mobileScroll {
+    display: block;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0 12px;
+    margin: -20px 0 0;
   }
   .x-top10-mobileScroll::-webkit-scrollbar { height: 6px; }
   .x-top10-mobileScroll::-webkit-scrollbar-track { background: rgba(255,255,255,.08); border-radius: 4px; }
   .x-top10-mobileScroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.35); border-radius: 4px; }
-  .x-top10-mobileTrack { 
-    display: inline-flex; 
+  .x-top10-mobileTrack {
+    display: inline-flex;
     align-items: flex-end;
-    gap: 8px; 
-    width: max-content; 
-    padding: 0; 
+    gap: 8px;
+    width: max-content;
+    padding: 0;
   }
   /* 移动端：沿用桌面版的数字+图片布局（x-top5-pair），仅缩小卡片宽度 */
-  .x-top10-m-pair{ 
+  .x-top10-m-pair{
     --cardW: clamp(70px, 17vw, 100px);         /* 缩小为原来的一半左右 */
     --numLeftGap: clamp(4px, 1.2vw, 8px);      /* 左侧留白减半 */
     --numOverlap: clamp(4px, 1.2vw, 8px);      /* 叠压度减半 */
     --numThinX: 1.04;                          /* 与桌面一致的形变 */
     --numTallY: 1.16;
   }
-.x-top10-mobileItem { 
-    position: relative; 
-    flex: 0 0 auto; 
-    width: 140px; 
-    aspect-ratio: 2 / 3; 
-  border-radius: 0; 
-    overflow: hidden; 
-    background: #0f131a; 
-    box-shadow: 0 6px 18px rgba(0,0,0,.35); 
-    cursor: pointer; 
+.x-top10-mobileItem {
+    position: relative;
+    flex: 0 0 auto;
+    width: 140px;
+    aspect-ratio: 2 / 3;
+  border-radius: 0;
+    overflow: hidden;
+    background: #0f131a;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    cursor: pointer;
   }
   .x-top10-mobileItem img { width: 100%; height: 100%; object-fit: cover; display:block; }
-  .x-top10-mobileItem .-number { 
-    position: absolute; left: 8px; bottom: 6px; 
-    font-size: 28px; font-weight: 800; 
-    letter-spacing: -0.02em; 
-    color: rgba(255,255,255,.95); 
-    text-shadow: 0 8px 20px rgba(0,0,0,.65); 
+  .x-top10-mobileItem .-number {
+    position: absolute; left: 8px; bottom: 6px;
+    font-size: 28px; font-weight: 800;
+    letter-spacing: -0.02em;
+    color: rgba(255,255,255,.95);
+    text-shadow: 0 8px 20px rgba(0,0,0,.65);
   }
   /* 移动端隐藏原 Embla 轮播，显示横向滚动版本 */
   .embla.x-top10-viewport{ display:none; }
 
   /* Catalog: 移动端横向滚动版本，隐藏桌面 Embla */
   .x-catalog-mobileScroll{ display:block; }
-  .x-catalog-mobileScroll { 
-    display: block; 
-    overflow-x: auto; 
-    overflow-y: hidden; 
-    -webkit-overflow-scrolling: touch; 
-    padding: 0 0 12px; 
-    margin: -8px 0 0; 
+  .x-catalog-mobileScroll {
+    display: block;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0 12px;
+    margin: -8px 0 0;
   }
   .x-catalog-mobileScroll::-webkit-scrollbar { height: 6px; }
   .x-catalog-mobileScroll::-webkit-scrollbar-track { background: rgba(255,255,255,.08); border-radius: 4px; }
   .x-catalog-mobileScroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.35); border-radius: 4px; }
-  .x-catalog-mobileTrack { 
-    display: inline-flex; 
+  .x-catalog-mobileTrack {
+    display: inline-flex;
     align-items: flex-end;
-    gap: 12px; 
-    width: max-content; 
-    padding: 0 12px; 
+    gap: 12px;
+    width: max-content;
+    padding: 0 12px;
   }
-  .x-catalog-mobileCard { 
-    position: relative; 
-    flex: 0 0 auto; 
-    width: 28vw; 
+  .x-catalog-mobileCard {
+    position: relative;
+    flex: 0 0 auto;
+    width: 28vw;
     max-width: 110px;
-    aspect-ratio: 2 / 3; 
-    border-radius: 0; 
-    overflow: hidden; 
-    background: #0f131a; 
-    box-shadow: 0 6px 18px rgba(0,0,0,.35); 
-    cursor: pointer; 
+    aspect-ratio: 2 / 3;
+    border-radius: 0;
+    overflow: hidden;
+    background: #0f131a;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    cursor: pointer;
   }
   .x-catalog-mobileCard img { width: 100%; height: 100%; object-fit: cover; display:block; border-radius: 0; }
-  .x-catalog-mobileCard .-overlay { 
-    position: absolute; 
-    inset: 0; 
+  .x-catalog-mobileCard .-overlay {
+    position: absolute;
+    inset: 0;
     background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.95) 100%);
     padding: 8px;
     opacity: 0;
@@ -1171,8 +1162,8 @@ img.img-fluid.-image,
   }
   .x-catalog-mobileCard:hover .-overlay { opacity: 1; }
   .x-catalog-mobileCard .-overlay { opacity: 1; } /* 移动端固定显示 */
-  .x-catalog-mobileCard .-title { 
-    font-size: 12px; 
+  .x-catalog-mobileCard .-title {
+    font-size: 12px;
     font-weight: 600;
     margin: 0;
     color: #fff;
@@ -1185,18 +1176,18 @@ img.img-fluid.-image,
 
   /* Catalog carousel: 2-up cards with compact paddings */
   .x-catalog { padding: 8px 0 24px; }
-  .x-catalog .-category-inner-container { 
-    margin-bottom: 6px; 
+  .x-catalog .-category-inner-container {
+    margin-bottom: 6px;
     padding: 0 var(--pad-x); /* 移动端也保持左右padding */
   }
   .x-category-movie-title{ padding: 0; }
-  
+
   /* 移动端调整按钮wrapper间距 */
   .-see-all-wrapper {
     margin-right: 6px;
     margin-bottom: 3px;
   }
-  
+
   /* 移动端按钮样式调整 */
   .-see-all-link {
     font-size: 12px;
@@ -1208,17 +1199,17 @@ img.img-fluid.-image,
   .embla-cat__slide { flex: 0 0 50%; padding: 0 6px; }
   .x-catalog-btn { display: none; }
   .x-catalog-card .-title { font-size: 14px; }
-  
+
   /* 移动端固定显示电影标题 */
-  .x-catalog-card .-overlay { 
-    opacity: 1; 
-    transform: translateY(0); 
+  .x-catalog-card .-overlay {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
   /* Poster animation more compact */
   .poster-animation-section { height: 22vh; min-height: 140px; }
-  
+
   /* 移动端紧凑的内容间距 */
   .poster-content-overlay { padding: 8px 0; }
   .poster-title { margin-bottom: 6px; }
@@ -1227,9 +1218,9 @@ img.img-fluid.-image,
 
 /* 平板等中等屏幕也固定显示标题 */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .x-catalog-card .-overlay { 
-    opacity: 1; 
-    transform: translateY(0); 
+  .x-catalog-card .-overlay {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -1241,13 +1232,13 @@ img.img-fluid.-image,
 
 /* 大屏幕桌面版恢复hover效果 */
 @media (min-width: 1025px) {
-  .x-catalog-card .-overlay { 
-    opacity: 0; 
-    transform: translateY(8px); 
+  .x-catalog-card .-overlay {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  .x-catalog-card:hover .-overlay { 
-    opacity: 1; 
-    transform: translateY(0); 
+  .x-catalog-card:hover .-overlay {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -1275,7 +1266,7 @@ img.img-fluid.-image,
 }
 
 .${styles.mainMovieCard}:hover .${styles.mainCardPoster} {
-  box-shadow: 
+  box-shadow:
     0 8px 24px rgba(0,0,0,.40),
     0 0 0 1px rgba(229, 9, 20, 0.3);       /* 保留红色边框效果 */
 }
@@ -1314,49 +1305,49 @@ h2.-title {
 }
 
 /* ===== Catalog 24 — Embla, 6 per view, step 6 ===== */
-.x-catalog { 
+.x-catalog {
   --pad-x: 4vw; /* 与 Top10 一致的外边距 */
   padding: 8px 0 48px; /* 增加下方padding：32px -> 48px */
-  background: #0a0c11; 
-  position: relative; 
+  background: #0a0c11;
+  position: relative;
 }
-.x-catalog .-category-inner-container{ 
-  padding: 0 var(--pad-x); 
+.x-catalog .-category-inner-container{
+  padding: 0 var(--pad-x);
   margin-bottom: 20px; /* 与Top 10一致的下方间距 */
 }
   /* 调整 Top10 标题容器内边距 */
-  .x-top5 .-category-inner-container{ 
-    padding-left: var(--pad-x); 
-    padding-right: var(--pad-x); 
+  .x-top5 .-category-inner-container{
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
     margin-bottom: 20px; /* 增加下方间距 */
   }
 .embla-cat { position: relative; overflow: hidden; padding: 0 var(--pad-x); }
-.embla-cat__container { 
-  display: flex; 
+.embla-cat__container {
+  display: flex;
   will-change: transform;
   backface-visibility: hidden;
   transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   margin: 0 -10px; /* 抵消单个 slide 的左右内边距，确保首张对齐且尺寸一致 */
 }
-.embla-cat__slide { 
-  flex: 0 0 calc(100% / 6); 
-  padding: 0 10px; 
+.embla-cat__slide {
+  flex: 0 0 calc(100% / 6);
+  padding: 0 10px;
   box-sizing: border-box;
   transform: translateZ(0); /* 硬件加速，防止意外缩放 */
 }
 /* 移除对第一张的特殊处理，保持所有卡片尺寸一致 */
 /* .embla-cat__slide:first-child { padding-left: 0; } */
-.x-catalog-card{ 
-  position: relative; 
+.x-catalog-card{
+  position: relative;
   transform: translateZ(0); /* 防止意外的 3D 变换 */
   overflow: hidden;               /* 让蒙版与圆角完全贴合，避免底部露出 */
   border-radius: 0;               /* 去除圆角 */
   cursor: pointer;                /* 专业点击指针 */
 }
-.x-catalog-card img{ 
-  width: 100%; 
-  display: block; 
-  border-radius: 0; 
+.x-catalog-card img{
+  width: 100%;
+  display: block;
+  border-radius: 0;
   box-shadow: none;
   transform: translateZ(0); /* 确保图片不会有缩放效果 */
   transition: none; /* 移除任何可能的过渡效果 */
@@ -1394,7 +1385,6 @@ h2.-title {
 }
 .x-catalog-card:hover .-overlay,
 .x-item-movie:hover .-overlay{ transform: translateY(0); opacity:1; }
-
 .x-catalog-card .-title,
 .x-item-movie .-title{
   margin:0; color:#fff; font-weight:500; font-size:13px; line-height:1.35; /* 更细更大一点 */
@@ -1409,26 +1399,26 @@ h2.-title {
 .x-catalog-nav{ position:absolute; inset:0; pointer-events:none; }
 
 /* Catalog arrows — with reduced padding and border color */
-.x-catalog-btn{ 
-  pointer-events:auto; 
-  width:84px; 
+.x-catalog-btn{
+  pointer-events:auto;
+  width:84px;
   height:60px; /* 减少高度，等效减少上下padding */
   border: 2px solid rgba(229, 9, 20, 0.6); /* 添加红色边框 */
   border-radius: 8px; /* 添加圆角 */
   background: rgba(0, 0, 0, 0.3); /* 半透明背景 */
-  display:grid; 
-  place-items:center; 
-  cursor:pointer; 
-  transition:transform .18s ease, border-color .18s ease, background .18s ease; 
-  position:absolute; 
-  top:50%; 
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition:transform .18s ease, border-color .18s ease, background .18s ease;
+  position:absolute;
+  top:50%;
   transform:translateY(-50%);
   z-index: 1;
 }
 .x-catalog-btn.-left{ left:10px; margin-left:0; }
 .x-catalog-btn.-right{ right:10px; margin-right:0; }
 /* Shadow-only halo shaped like the arrow (chevron) */
-.x-catalog-btn::before{ 
+.x-catalog-btn::before{
   content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:56px; height:56px; pointer-events:none; z-index:-1;
   /* Create a chevron-shaped shadow using conic-gradient mask */
@@ -1437,19 +1427,19 @@ h2.-title {
   mask: conic-gradient(from 45deg at 50% 50%, transparent 0 25%, #000 25% 35%, transparent 35% 65%, #000 65% 75%, transparent 75% 100%);
   filter: blur(6px);
 }
-.x-catalog-btn:hover{ 
-  transform:translateY(calc(-50% - 1px)); 
+.x-catalog-btn:hover{
+  transform:translateY(calc(-50% - 1px));
   border-color: rgba(229, 9, 20, 0.9); /* hover时边框更亮 */
   background: rgba(229, 9, 20, 0.15); /* hover时背景稍微变红 */
 }
-.x-catalog-btn:active{ 
-  transform:translateY(-50%) scale(.96); 
+.x-catalog-btn:active{
+  transform:translateY(-50%) scale(.96);
   border-color: rgba(229, 9, 20, 1); /* 点击时边框完全不透明 */
   background: rgba(229, 9, 20, 0.25); /* 点击时背景更红 */
 }
-.x-catalog-btn svg{ 
-  width:42px; height:42px; color:rgba(255,255,255,.98); 
-  transition: transform .18s ease, filter .18s ease, color .18s ease; 
+.x-catalog-btn svg{
+  width:42px; height:42px; color:rgba(255,255,255,.98);
+  transition: transform .18s ease, filter .18s ease, color .18s ease;
   filter: drop-shadow(0 24px 48px rgba(0,0,0,.90)) drop-shadow(0 12px 20px rgba(0,0,0,.70));
 }
 /* Hover: keep neutral white, slightly intensify shadow only */
@@ -1576,8 +1566,6 @@ h2.-title {
 }
 /* 移动端样式已移到文件末尾统一处理 */
 
-
-
 .${styles.pageRoot} {
   background: #0a0c11;
   color: var(--text);
@@ -1594,7 +1582,6 @@ h2.-title {
   margin: 0;
   padding: 0;
 }
-
 /* Header - 精确复刻原版 */
 .${styles.header} {
   position: fixed;
@@ -1602,15 +1589,14 @@ h2.-title {
   left: 0;
   right: 0;
   z-index: 100;
-  background: linear-gradient(180deg, 
-    rgba(10, 12, 18, 0.95) 0%, 
-    rgba(10, 12, 18, 0.7) 60%, 
-    rgba(10, 12, 18, 0.3) 85%, 
+  background: linear-gradient(180deg,
+    rgba(10, 12, 18, 0.95) 0%,
+    rgba(10, 12, 18, 0.7) 60%,
+    rgba(10, 12, 18, 0.3) 85%,
     transparent 100%);
 
   transition: all 0.3s ease;
 }
-
 .${styles.headerInner} {
   display: flex;
   align-items: center;
@@ -1642,8 +1628,6 @@ h2.-title {
   position: relative;
 }
 
-
-
 .${styles.hamburger}:hover {
   transform: translateY(-3px) scale(1.15);
   filter: drop-shadow(0 8px 16px rgba(229, 9, 20, 0.4));
@@ -1674,7 +1658,7 @@ h2.-title {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 4;
-  transition: 
+  transition:
     stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
     stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1),
     stroke 300ms ease;
@@ -1714,10 +1698,10 @@ h2.-title {
 }
 
 @keyframes ezm-lineFloat {
-  0%, 100% { 
+  0%, 100% {
     stroke-width: 2.5;
   }
-  50% { 
+  50% {
     stroke-width: 2.8;
   }
 }
@@ -1849,8 +1833,6 @@ h2.-title {
   position: relative;
 }
 
-
-
 .${styles.searchBtn}:hover {
   color: #ffffff;
   transform: scale(1.1);
@@ -1873,8 +1855,8 @@ h2.-title {
 }
 
 /* LOGO 图片尺寸（和 ezmovie 观感接近） */
-.ezm-navbar-brand { 
-  display: inline-flex; 
+.ezm-navbar-brand {
+  display: inline-flex;
   align-items: center;
   transition: all 0.3s ease;
 }
@@ -1892,37 +1874,36 @@ h2.-title {
   100% { transform: translateY(-2px) scale(1.12); }
 }
 
-.ezm-logoImg { 
-  height: 32px; 
-  display: block; 
+.ezm-logoImg {
+  height: 32px;
+  display: block;
   object-fit: contain;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
-
-@media (min-width: 1200px) { 
-  .ezm-logoImg { 
-    height: 36px; 
-  } 
+@media (min-width: 1200px) {
+  .ezm-logoImg {
+    height: 36px;
+  }
 }
 
 /* 赞助 LOGO 条（桌面显示） */
-.ezm-show-lg { 
-  display: none; 
+.ezm-show-lg {
+  display: none;
 }
 
 @media (min-width: 992px) {
-  .ezm-show-lg { 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
+  .ezm-show-lg {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 }
 
 /* 赞助 LOGO 按钮外观 */
-.ezm-sponsorBar { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
+.ezm-sponsorBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .ezm-sponsorLogo {
@@ -1948,10 +1929,10 @@ h2.-title {
 }
 
 /* 调整 Header 右侧整体间距更像原站 */
-.${styles.headerActions} { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
+.${styles.headerActions} {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 分隔线样式 */
@@ -2140,8 +2121,6 @@ h2.-title {
   transform: scale(1.05);
 }
 
-
-
 /* Slogan */
 .${styles.sloganSection} {
   padding: 26px 0 22px;
@@ -2162,8 +2141,6 @@ h2.-title {
   letter-spacing: 0.2px;
   line-height: 1.3;
 }
-
-
 
 /* Professional Movie Slider Section - Better than ezmovie */
 .${styles.movieSliderSection} {
@@ -2210,8 +2187,6 @@ h2.-title {
   position: relative;
 }
 
-
-
 /* 右侧滚动区域 - 底部对齐大卡片 */
 .${styles.rightScrollArea} {
   flex: 1;
@@ -2229,10 +2204,10 @@ h2.-title {
   padding: 8px 4px 20px;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  mask-image: linear-gradient(90deg, 
-    transparent 0%, 
-    #000 4%, 
-    #000 96%, 
+  mask-image: linear-gradient(90deg,
+    transparent 0%,
+    #000 4%,
+    #000 96%,
     transparent 100%);
   will-change: scroll-position;
 }
@@ -2310,13 +2285,13 @@ h2.-title {
   background: #12141b;
   border: none;
   transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .${styles.mainMovieCard}:hover {
   transform: translateY(-12px) scale(1.015);
-  box-shadow: 
+  box-shadow:
     0 35px 70px rgba(0, 0, 0, 0.7);
 }
 
@@ -2371,7 +2346,7 @@ h2.-title {
 .${styles.mainMovieCard}:hover .${styles.mainCardPoster} {
   transform: translateY(-6px) scale(1.025);
   border-color: rgba(229, 9, 20, 0.5);
-  box-shadow: 
+  box-shadow:
     0 25px 55px rgba(0, 0, 0, 0.8),
     0 0 0 1px rgba(229, 9, 20, 0.3);
   filter: brightness(1.05) saturate(1.1);
@@ -2397,12 +2372,11 @@ h2.-title {
 
 .${styles.mainMovieCard}:hover .${styles.mainCardDetails} h2 {
   color: #ffffff;
-  text-shadow: 
+  text-shadow:
     0 4px 20px rgba(229, 9, 20, 0.5),
     0 2px 8px rgba(0, 0, 0, 0.9);
   transform: translateY(-3px);
 }
-
 .${styles.mainCardInfo} {
   display: flex;
   align-items: center;
@@ -2420,11 +2394,9 @@ h2.-title {
   margin-bottom: 14px; /* 进一步缩小边距 */
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
-
 .${styles.mainCardDetails} .${styles.cardCategories} {
   margin-bottom: 32px;
 }
-
 .${styles.mainCardDetails} .${styles.cardPlayBtn} {
   padding: 8px 16px;   /* 进一步大幅缩小内边距 */
   font-size: 13px;     /* 进一步大幅缩小 */
@@ -2485,7 +2457,7 @@ h2.-title {
 .${styles.smallMovieCard}:hover {
   transform: translateY(-12px) scale(1.03);
   border-color: rgba(229, 9, 20, 0.4);
-  box-shadow: 
+  box-shadow:
     0 25px 50px rgba(0, 0, 0, 0.7),
     0 0 0 1px rgba(229, 9, 20, 0.2);
 }
@@ -2507,7 +2479,7 @@ h2.-title {
 .${styles.movieCard}:hover {
   transform: translateY(-12px) scale(1.02);
   border-color: rgba(229, 9, 20, 0.4);
-  box-shadow: 
+  box-shadow:
     0 25px 50px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(229, 9, 20, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -2599,7 +2571,7 @@ h2.-title {
 .${styles.movieCard}:hover .${styles.cardPoster} {
   transform: translateY(-4px) scale(1.05);
   border-color: rgba(229, 9, 20, 0.4);
-  box-shadow: 
+  box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(229, 9, 20, 0.3);
 }
@@ -2729,7 +2701,7 @@ h2.-title {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 
+  box-shadow:
     0 3px 12px rgba(229, 9, 20, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   position: relative;
@@ -2751,7 +2723,7 @@ h2.-title {
 .${styles.cardPlayBtn}:hover {
   background: linear-gradient(135deg, #ff1a25 0%, #e50914 100%);
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 8px 24px rgba(229, 9, 20, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
@@ -2762,7 +2734,7 @@ h2.-title {
 
 .${styles.cardPlayBtn}:active {
   transform: translateY(0) scale(0.98);
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(229, 9, 20, 0.4),
     inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
@@ -2818,11 +2790,11 @@ h2.-title {
 }
 
 @keyframes newBadgePulse {
-  0%, 100% { 
+  0%, 100% {
     box-shadow: 0 2px 8px rgba(229, 9, 20, 0.4);
     transform: scale(1);
   }
-  50% { 
+  50% {
     box-shadow: 0 4px 16px rgba(229, 9, 20, 0.6);
     transform: scale(1.05);
   }
@@ -2834,20 +2806,20 @@ h2.-title {
     flex: 0 0 680px;  /* 中屏稍微缩小 */
     height: 380px;    /* 中屏高度相应增加 */
   }
-  
+
   .${styles.mainCardContent} {
     padding: 20px;      /* 进一步缩小 */
     gap: 16px;          /* 进一步缩小 */
   }
-  
+
   .${styles.mainCardPoster} {
     flex: 0 0 200px;
   }
-  
+
   .${styles.mainCardDetails} h2 {
     font-size: 16px;    /* 缩小 */
   }
-  
+
   /* 旧的smallMovieCard样式已被ezm-smallMovieCard替代
   .${styles.smallMovieCard} {
     flex: 0 0 240px;
@@ -2861,34 +2833,34 @@ h2.-title {
     flex-direction: column;
     gap: 24px;
   }
-  
+
   .${styles.fixedMainCard} {
     flex: none;
     width: 100%;
     height: 340px;  /* 小屏高度相应增加 */
   }
-  
+
   .${styles.mainCardContent} {
     padding: 20px;
     gap: 16px;
   }
-  
+
   .${styles.mainCardPoster} {
     flex: 0 0 160px;
   }
-  
+
   .${styles.mainCardDetails} h2 {
     font-size: 14px;    /* 缩小 */
   }
-  
+
   .${styles.mainCardDetails} p {
     font-size: 11px;    /* 缩小 */
   }
-  
+
   .${styles.rightScrollArea} {
     height: 280px;
   }
-  
+
   /* 旧的smallMovieCard样式已被ezm-smallMovieCard替代
   .${styles.smallMovieCard} {
     flex: 0 0 200px;
@@ -2896,7 +2868,6 @@ h2.-title {
   }
   */
 }
-
 /* 旧的移动端样式已删除，统一移到文件末尾 */
 
 /* Responsive */
@@ -3002,7 +2973,7 @@ h2.-title {
   text-shadow:0 1px 2px rgba(0,0,0,.6);
 }
 .x-card-movie .-gap{opacity:.95}
-.x-card-movie img.-age-img{width:32px;height:20px;display:inline-block}
+.x-card-movie img.-age-img{width:20px;height:20px;display:inline-block}
 .x-card-movie img.-hd-img{width:26px;height:19px;display:inline-block}
 .x-card-movie .-description{
   /* 描述区域，自然排序第3行 - 上下添加padding */
@@ -3087,8 +3058,8 @@ h2.-title {
   --ten1Top:  0%;     /* 1 的垂直位移，与0对齐 */
 }
 
-.x-top5-pair .-number.is-10{ 
-  position:relative; 
+.x-top5-pair .-number.is-10{
+  position:relative;
   letter-spacing: 0;       /* 关闭字距，避免影响叠放 */
 }
 
@@ -3143,17 +3114,17 @@ h2.-title {
 .promo-text p{ font-size:18px; color:#fff; margin:0; line-height:1.7; text-shadow:0 8px 24px rgba(0,0,0,.65); }
 @media (max-width: 1200px){ .promo-bg{ min-height: 480px; } .promo-text{ max-width: 500px; } }
 @media (max-width: 992px){ .promo-bg{ min-height: 440px; } .promo-text{ max-width: 420px; } }
-@media (max-width: 768px){ 
+@media (max-width: 768px){
   .promo-bg{ min-height: 320px; padding: 20px 0; } /* 减少垂直padding */
   .promo-inner{ padding: 0 20px; } /* 减少水平padding */
-  .promo-text{ max-width: 90%; } 
+  .promo-text{ max-width: 90%; }
   .promo-text.is-right{ text-align: right; } /* 第二个section保持右对齐 */
   .promo-text h3{ font-size: 24px; margin: 0 0 8px; } /* 缩小标题字体 */
   .promo-text p{ font-size: 14px; line-height: 1.5; word-break: break-word; hyphens: auto; overflow-wrap: break-word; } /* 缩小段落字体并优化断词 */
 }
 
 /* 超小屏幕进一步优化 */
-@media (max-width: 480px){ 
+@media (max-width: 480px){
   .promo-bg{ min-height: 280px; padding: 16px 0; }
   .promo-inner{ padding: 0 16px; }
   .promo-text h3{ font-size: 20px; margin: 0 0 6px; }
@@ -3201,7 +3172,6 @@ h2.-title {
   );
   z-index: 1;
 }
-
 .features-container {
   position: relative;
   z-index: 2;
@@ -3220,7 +3190,6 @@ h2.-title {
   align-items: center;
   width: 100%;
 }
-
 .feature-card {
   position: relative;
   background: transparent;
@@ -3229,7 +3198,6 @@ h2.-title {
   transition: all 0.3s ease;
   text-align: center;
 }
-
 .feature-card:hover {
   transform: translateY(-8px);
 }
@@ -3289,30 +3257,30 @@ h2.-title {
     padding: 100px 0 120px;
     min-height: 800px;
   }
-  
+
   .features-grid {
     gap: 65px;
   }
-  
+
   .feature-content {
     gap: 15px;
   }
-  
+
   .feature-icon {
     width: 280px;
     height: 185px;
   }
-  
+
   .feature-title {
     font-size: 24px;
     margin-bottom: 12px;
   }
-  
+
   .feature-description {
     font-size: 15px;
     line-height: 1.4;
   }
-  
+
   .feature-text {
     max-width: 520px;
   }
@@ -3323,36 +3291,36 @@ h2.-title {
     padding: 80px 0 100px;
     min-height: 700px;
   }
-  
+
   .features-container {
     padding: 0 30px;
   }
-  
+
   .features-grid {
     grid-template-columns: 1fr;
     gap: 70px;
   }
-  
+
   .feature-content {
     gap: 12px;
   }
-  
+
   .feature-icon {
     width: 250px;
     height: 165px;
   }
-  
+
   .feature-title {
     font-size: 22px;
     margin-bottom: 10px;
   }
-  
+
   .feature-description {
     font-size: 14px;
     line-height: 1.4;
     text-align: center;
   }
-  
+
   .feature-text {
     max-width: 400px;
   }
@@ -3392,7 +3360,6 @@ h2.-title {
 .new-content-inner {
   text-align: center;
 }
-
 .new-content-title {
   font-size: 42px;
   font-weight: 700;
@@ -3448,26 +3415,26 @@ h2.-title {
   .new-content-section {
     padding: 60px 0;
   }
-  
+
   .new-content-container {
     padding: 0 40px;
   }
-  
+
   .new-content-title {
     font-size: 36px;
     margin-bottom: 40px;
   }
-  
+
   .content-item h3 {
     font-size: 24px;
     margin-bottom: 25px;
   }
-  
+
   .content-item li strong {
     font-size: 18px;
     margin-bottom: 10px;
   }
-  
+
   .content-item li p {
     font-size: 15px;
     line-height: 1.5;
@@ -3478,30 +3445,30 @@ h2.-title {
   .new-content-section {
     padding: 50px 0;
   }
-  
+
   .new-content-container {
     padding: 0 30px;
   }
-  
+
   .new-content-title {
     font-size: 28px;
     margin-bottom: 30px;
   }
-  
+
   .content-item h3 {
     font-size: 22px;
     margin-bottom: 20px;
   }
-  
+
   .content-item li {
     margin-bottom: 25px;
   }
-  
+
   .content-item li strong {
     font-size: 16px;
     margin-bottom: 8px;
   }
-  
+
   .content-item li p {
     font-size: 14px;
     line-height: 1.5;
@@ -3714,21 +3681,21 @@ h2.-title {
     height: 40vh;  /* 从27vh增加到40vh */
     min-height: 240px;  /* 从160px增加到240px */
   }
-  
+
   .poster-content-container {
     padding: 0 40px;
   }
-  
+
   .poster-title {
     font-size: 28px;
     margin-bottom: 12px;
   }
-  
+
   .poster-subtitle {
     font-size: 14px;
     margin-bottom: 18px;
   }
-  
+
   .poster-request-btn {
     padding: 12px 25px;
     font-size: 12px;
@@ -3740,29 +3707,29 @@ h2.-title {
     height: 25vh;  /* 缩小手机版高度 */
     min-height: 160px;  /* 减少最小高度 */
   }
-  
+
   .poster-content-overlay {
     padding: 8px 0;  /* 减少上下padding */
   }
-  
+
   .poster-content-container {
     padding: 0 30px;
   }
-  
+
   .poster-title {
     font-size: 22px;
     margin-bottom: 6px;  /* 进一步减少底部margin */
   }
-  
+
   .poster-subtitle {
     font-size: 12px;
     margin-bottom: 10px;  /* 减少底部margin */
   }
-  
+
   .poster-btn-wrapper {
     margin-top: 8px;  /* 减少按钮上方间距 */
   }
-  
+
   .poster-request-btn {
     padding: 10px 20px;
     font-size: 11px;
@@ -3773,11 +3740,11 @@ h2.-title {
   .poster-title {
     font-size: 18px;
   }
-  
+
   .poster-subtitle {
     font-size: 10px;
   }
-  
+
   .poster-request-btn {
     padding: 8px 16px;
     font-size: 10px;
@@ -3790,29 +3757,29 @@ h2.-title {
     height: 20vh;
     min-height: 120px;
   }
-  
+
   .poster-content-overlay {
     padding: 5px 0;  /* 超小屏幕更紧凑的上下padding */
   }
-  
+
   .poster-content-container {
     padding: 0 20px;
   }
-  
+
   .poster-title {
     font-size: 16px;
     margin-bottom: 4px;  /* 进一步减少底部margin */
   }
-  
+
   .poster-subtitle {
     font-size: 11px;
     margin-bottom: 8px;  /* 减少底部margin */
   }
-  
+
   .poster-btn-wrapper {
     margin-top: 6px;  /* 减少按钮上方间距 */
   }
-  
+
   .poster-request-btn {
     padding: 6px 14px;
     font-size: 9px;
@@ -3892,7 +3859,6 @@ h2.-title {
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .footer-nav-link:hover {
   background: rgba(229, 9, 20, 0.2);
   color: #ffffff;
@@ -3944,70 +3910,68 @@ h2.-title {
     padding: 40px 0 20px;
     margin-top: 0;
   }
-  
+
   .footer-top {
     flex-direction: column;
     gap: 30px;
     margin-bottom: 35px;
   }
-  
+
   .footer-sponsors {
     justify-content: center;
     gap: 15px;
   }
-  
+
   .sponsor-logo {
     height: 32px;
   }
-  
+
   .footer-nav {
     gap: 6px 12px;
     padding: 0 10px;
   }
-  
+
   .footer-nav-link {
     padding: 6px 12px;
     font-size: 13px;
   }
-  
+
   .footer-links {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .divider {
     display: none;
   }
-  
+
   .footer-copyright {
     font-size: 12px;
     padding: 0 10px;
   }
 }
-
 @media (max-width: 480px) {
   .footer-top {
     gap: 20px;
   }
-  
+
   .footer-logo {
     height: 40px;
   }
-  
+
   .sponsor-logo {
     height: 28px;
   }
-  
+
   .footer-nav {
     gap: 5px 8px;
   }
-  
+
   .footer-nav-link {
     padding: 5px 10px;
     font-size: 12px;
   }
 }
-
 /* --------------------  MOBILE ONLY (≤768px)  -------------------- */
 /* 标题贴最左，间距更紧 */
 @media (max-width: 768px) {
@@ -4161,6 +4125,20 @@ h2.-title {
     backdrop-filter: blur(8px) !important;
     border: 1px solid rgba(255,255,255,0.12) !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+    /* Hover dark overlay */
+  }
+
+  .ezm-rightScrollArea .ezm-smallMovieCard::after{
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,0) !important;
+    transition: background .2s ease !important;
+    pointer-events: none !important;
+  }
+
+  .ezm-rightScrollArea .ezm-smallMovieCard:hover::after{
+    background: rgba(0,0,0,0.28) !important; /* slight dark overlay */
   }
 
   /* 移动端：删除大卡片所有圆角，并缩小内部主海报（不改比例） */
@@ -4198,8 +4176,14 @@ h2.-title {
     overflow: hidden !important;
     white-space: nowrap !important;
     font-weight: 500 !important;
+    opacity: 0 !important;
+    transition: opacity .2s ease !important;
   }
-  /* 移动端去除滚动区域两侧的渐隐遮罩，避免遮挡造成“未贴边”的错觉 */
+
+  .ezm-rightScrollArea .ezm-smallMovieCard:hover .movie-title{
+    opacity: 1 !important;
+  }
+  /* 移动端去除滚动区域两侧的渐隐遮罩，避免遮挡造成"未贴边"的错觉 */
   .ezm-rightScrollArea::before,
   .ezm-rightScrollArea::after{
     display: none !important;
@@ -4239,7 +4223,6 @@ const IconSearch = ({ className }: { className?: string }) => (
     <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5 1.5-1.5-5-5zM4 9.5C4 6.46 6.46 4 9.5 4S15 6.46 15 9.5 12.54 15 9.5 15 4 12.54 4 9.5z" />
   </svg>
 );
-
 // Main Component
 const EZMovieHome: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -4262,191 +4245,39 @@ const EZMovieHome: React.FC = () => {
     descriptionHtml?: string;
   } | null>(null);
 
-  // API Integration - Fetch real data
-  const { data: homeData, isLoading: homeLoading } = useHomeData();
-  const { data: brandConfig } = useBrandConfig();
-  const { data: sponsors } = useSponsorPlacements("home");
-
-  // Transform API data to match existing component structure
-  const apiHeroSlides =
-    homeData?.sections
-      ?.find((s: any) => s.kind === "hero")
-      ?.items?.map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        posterUrl:
-          item.backdrop ||
-          item.poster ||
-          "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        backdropUrl:
-          item.backdrop ||
-          item.poster ||
-          "https://image.tmdb.org/t/p/w1920/yDHYTfA3R0jFYba16jBB1ef8oIt.jpg",
-        logoUrl:
-          item.logo ||
-          "https://ezmovie.me/media/cache/strip/202304/block/dc02782fcfc5ee44bc9682d82e489b0f.png",
-        year: item.year,
-        description: item.synopsis || item.description || "Movie description",
-      })) || heroSlides;
-
-  const apiPopularMovies =
-    homeData?.sections
-      ?.find((s: any) => s.kind === "slider" && s.title === "หนังยอดนิยม")
-      ?.items?.map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        posterUrl:
-          item.poster ||
-          "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        year: item.year,
-        rating: item.rating,
-        genres: item.genres || [],
-      })) || defaultTrending;
-
-  const apiTop10Movies =
-    homeData?.sections
-      ?.find((s: any) => s.kind === "top10")
-      ?.items?.map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        posterUrl:
-          item.poster ||
-          "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        year: item.year,
-        rating: item.rating,
-        rank: item.rank,
-      })) || [];
-
-  const apiThaiMovies =
-    homeData?.sections
-      ?.find((s: any) => s.kind === "slider" && s.title === "หนังไทย")
-      ?.items?.map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        posterUrl:
-          item.poster ||
-          "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        year: item.year,
-        rating: item.rating,
-      })) || [];
-
-  const apiAnimeMovies =
-    homeData?.sections
-      ?.find((s: any) => s.kind === "slider" && s.title === "อนิเมะ")
-      ?.items?.map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        posterUrl:
-          item.poster ||
-          "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        year: item.year,
-        rating: item.rating,
-      })) || [];
-
-  // Use API data if available, fallback to hardcoded data
-  // Add safety checks to prevent UI from disappearing
-  const currentHeroSlides =
-    apiHeroSlides && apiHeroSlides.length > 0 ? apiHeroSlides : heroSlides;
-  const currentPopularMovies =
-    apiPopularMovies && apiPopularMovies.length > 0
-      ? apiPopularMovies
-      : defaultTrending;
-  const currentTop10Movies =
-    apiTop10Movies && apiTop10Movies.length > 0 ? apiTop10Movies : [];
-  const currentThaiMovies =
-    apiThaiMovies && apiThaiMovies.length > 0 ? apiThaiMovies : [];
-  const currentAnimeMovies =
-    apiAnimeMovies && apiAnimeMovies.length > 0 ? apiAnimeMovies : [];
-
-  // Debug logging to help troubleshoot
-  console.log("API Data Status:", {
-    homeData: !!homeData,
-    heroSlides: currentHeroSlides.length,
-    popularMovies: currentPopularMovies.length,
-    top10Movies: currentTop10Movies.length,
-    thaiMovies: currentThaiMovies.length,
-    animeMovies: currentAnimeMovies.length,
-  });
-
-  // Additional safety check - ensure we always have data
-  if (!currentHeroSlides || currentHeroSlides.length === 0) {
-    console.warn("No hero slides available, using fallback data");
-  }
-  if (!currentPopularMovies || currentPopularMovies.length === 0) {
-    console.warn("No popular movies available, using fallback data");
-  }
-
   const openMovieModal = (movie: {
     title: string;
     poster: string;
     backdrop?: string;
     trailerUrl?: string;
+    year?: string | number;
+    runtime?: string;
+    imdb?: string | number;
+    ageRating?: string;
+    language?: string;
+    actors?: string[];
+    categories?: Array<{ label: string; href?: string }>;
+    tags?: string[];
+    description?: string;
+    descriptionHtml?: string;
   }) => {
     setSelectedMovie({
       title: movie.title,
       poster: movie.poster,
       backdrop: movie.backdrop || movie.poster,
-      trailerUrl: "https://www.youtube.com/embed/oKiYuIsPxYk?autoplay=1&mute=1",
-      year: "2010",
-      runtime: "1 ชม. 37 นาที",
-      imdb: "8.1",
-      ageRating: "13+",
-      language: "ไทย",
-      actors: [
-        "Jonah Hill",
-        "Gerard Butler",
-        "Jay Baruchel",
-        "America Ferrera",
-        "Craig Ferguson",
-        "Christopher Mintz-Plasse",
-      ],
-      categories: [
-        { label: "2010", href: "/movies/ปี-2010" },
-        { label: "อนิเมะ (การ์ตูน)", href: "/movies/อนิเมะ-anime" },
-        { label: "หนังแอคชั่นบู๊", href: "/movies/หนังแอคชั่นบู๊-action" },
-        { label: "หนังตลก", href: "/movies/หนังตลก-comedy" },
-        { label: "หนังผจญภัย", href: "/movies/หนังผจญภัย-adventure" },
-        { label: "หนังครอบครัว", href: "/movies/หนังครอบครัว-family" },
-        { label: "หนังแฟนตาซี", href: "/movies/หนังแฟนตาซี-fantasy" },
-        { label: "พากย์ไทย", href: "/movies/พากย์ไทย" },
-        { label: "ซับไทย", href: "/movies/ซับไทย" },
-      ],
-      tags: [
-        "การ์ตูน",
-        "หนังครอบครัว",
-        "หนังผจญภัย",
-        "หนังแฟนตาซี",
-        "แอนิเมชั่น",
-        "ดูหนังออนไลน์",
-        "หนังออนไลน์",
-        "ดูหนังออนไลน์ฟรี",
-        "หนังออนไลน์ฟรี",
-        "เว็บหนังออนไลน์",
-        "เว็บดูหนังออนไลน์",
-        "การ์ตูนแอนิเมชัน",
-        "แอนิเมชันผจญภัย",
-        "แอนิเมชันฝรั่ง",
-        "หนังแอนิเมชั่น",
-        "How to Train Your Dragon",
-        "อภินิหารไวกิ้งพิชิตมังกร",
-      ],
-      descriptionHtml: `
-        <p><strong>แอนิเมชัน</strong> How to Train Your Dragon (2010) อภินิหารไวกิ้งพิชิตมังกร เรื่องราวเกิดขึ้นรอบกายไวกิ้งหนุ่มน้อยวัยทีนที่ชื่อว่า ฮิคคัพ เขาใช้ชีวิตอยู่บนเกาะเบิร์ก ที่ซึ่งการต่อสู้กับมังกรคือ วิถีแห่งชีวิตผู้คนบนเกาะ ด้วยความคิดที่ดูจะแปลกใหม่ฉลาดกว่าใคร กับอารมณ์ขันที่ไม่เหมือนใคร ทำให้เขาไม่ค่อยได้รับการยอมรับจากคนอื่น ๆ ซึ่งรวมถึงพ่อของเขา ที่เป็นหัวหน้าเผ่าด้วย เรื่องราวการผจญภัยที่น่าตื่นเต้นเกิดขึ้น เมื่อถึงเวลาที่ฮิคคัพต้องเข้าฝึกการต่อสู้กับมังกรเช่นเดียวกับไวกิ้งแตกหนุ่มคนอื่น ๆ เขาเห็นถึงโอกาสที่จะพิสูจน์เลือกนักสู้ของตัวเอง แต่เมื่อเขาได้พบกับศัตรู ที่จะกลับกลายเป็นเพื่อนรักเพื่อนซี้ในที่สุด เจ้ามังกรที่ได้รับบาดเจ็บ โลกของไวกิ้งฮิคคัพก็กลับตาลปัตร การพิสูจน์ความกล้าหาญครั้งนี้ กลับกลายเป็นโอกาสที่จะสร้างอนาคตใหม่ของชนเผ่าไวกิ้งทั้งหมด</p>
-        <br>
-        <p><strong>รวม หนังการ์ตูนแอนิเมชัน กระแสดี ไม่มีตก</strong></p>
-        <br>
-        <p>- <a href="/movie/the-wild-robot-2024">The Wild Robot (2024) หุ่นยนต์ผจญภัยในป่ากว้าง</a></p>
-        <br>
-        <p>- <a href="/movie/transformers-one-2024">Transformers One (2024) ทรานส์ฟอร์เมอร์ส 1</a></p>
-        <br>
-        <p>- <a href="/movie/inside-out-2-2024">Inside Out 2 (2024) มหัศจรรย์อารมณ์อลเวง 2</a></p>
-        <br>
-        <p>- <a href="/movie/despicable-me-4-2024">Despicable Me 4 (2024) มิสเตอร์แสบ ร้ายเกินพิกัด 4</a></p>
-        <br>
-        <p>- <a href="/movie/the-garfield-movie-2024">The Garfield Movie (2024) เดอะ การ์ฟิลด์ มูฟวี่</a></p>
-        <br>
-        <p>- <a href="/movie/moana-2016">Moana (2016) โมอาน่า ผจญภัยตำนานหมู่เกาะทะเลใต้</a></p>
-      `,
+      trailerUrl: movie.trailerUrl,
+      year: movie.year,
+      runtime: movie.runtime,
+      imdb: movie.imdb,
+      ageRating: movie.ageRating,
+      language: movie.language,
+      actors: movie.actors,
+      categories: movie.categories,
+      tags: movie.tags,
+      description: movie.description,
+      descriptionHtml:
+        movie.descriptionHtml ||
+        (movie.description ? `<p>${movie.description}</p>` : undefined),
     });
     setIsModalOpen(true);
     document.body.style.overflow = "hidden";
@@ -4485,100 +4316,82 @@ const EZMovieHome: React.FC = () => {
     return () => window.removeEventListener("ezm-open-modal", handler as any);
   }, []);
 
+  // Dynamic hero slides
+  const API_BASE = `${
+    (import.meta as any).env?.VITE_API_BASE || "http://localhost:4000"
+  }/v1`;
+  const mapBannerItemToMovie = (item: any): Movie => ({
+    id: item.id,
+    title: item.title,
+    posterUrl: item.poster || "",
+    backdropUrl: item.backdrop || item.poster || "",
+    logoUrl: item.logo || undefined,
+    description: item.synopsis || "",
+    year: item.year,
+    ageRating: item.ageRating,
+  });
+
+  // Hero slides (fetch BANNER)
+  const [heroSlides, setHeroSlides] = useState<Movie[]>([]);
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        const resp = await fetch(
+          `${API_BASE}/movies?page=1&limit=24&tagName=BANNER`
+        );
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const slides = Array.isArray(data.items)
+          ? data.items.map(mapBannerItemToMovie)
+          : [];
+        setHeroSlides(slides);
+      } catch (_) {}
+    };
+    fetchBanner();
+  }, []);
+
   // 自动轮播
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % currentHeroSlides.length);
+      setCurrentSlide((prev) =>
+        heroSlides.length > 0 ? (prev + 1) % heroSlides.length : 0
+      );
     }, 5000); // 5秒切换
 
     return () => clearInterval(interval);
-  }, [currentHeroSlides]);
-
-  // Show loading state while API data is being fetched
-  if (homeLoading) {
-    return (
-      <div className={styles.pageRoot}>
-        <style>{css}</style>
-        <SiteHeader onMenuClick={() => setIsMenuOpen(true)} />
-        <SponsorMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-        <main>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "50vh",
-              color: "#fff",
-              fontSize: "18px",
-            }}
-          >
-            กำลังโหลดข้อมูล... Loading...
-          </div>
-        </main>
-        <SiteFooter />
-      </div>
-    );
-  }
+  }, [heroSlides.length]);
 
   return (
     <div className={styles.pageRoot}>
       <style>{css}</style>
       <SiteHeader onMenuClick={() => setIsMenuOpen(true)} />
       <SponsorMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-      <main>
-        <>
-          <section>
-            <HeroSection
-              currentSlide={currentSlide}
-              slides={currentHeroSlides}
-            />
-          </section>
-          <section>
-            <SloganSection />
-          </section>
-          <section>
-            <MovieSliderSection
-              onOpenMovie={openMovieModal}
-              movies={currentPopularMovies}
-              title="หนังยอดนิยม"
-            />
-          </section>
-          <section>
-            <Top10WeeklyCarousel
-              onOpenMovie={openMovieModal}
-              movies={currentTop10Movies}
-            />
-          </section>
-          <section>
-            <Catalog20Section
-              onOpenMovie={openMovieModal}
-              movies={currentThaiMovies}
-              title="หนังไทย"
-            />
-          </section>
-          <section>
-            <CatalogAnimeSection
-              onOpenMovie={openMovieModal}
-              movies={currentAnimeMovies}
-              title="อนิเมะ"
-            />
-          </section>
-          <section>
-            <CatalogSeriesSection
-              onOpenMovie={openMovieModal}
-              movies={currentPopularMovies}
-              title="ซีรี่ย์"
-            />
-          </section>
-          <section>
-            <CatalogThaiSection
-              onOpenMovie={openMovieModal}
-              movies={currentThaiMovies}
-              title="หนังไทย"
-            />
-          </section>
-        </>
-      </main>
+      <>
+        <section>
+          <HeroSection currentSlide={currentSlide} slides={heroSlides} />
+        </section>
+        <section>
+          <SloganSection />
+        </section>
+        <section>
+          <MovieSliderSection onOpenMovie={openMovieModal} />
+        </section>
+        <section>
+          <Top10WeeklyCarousel onOpenMovie={openMovieModal} />
+        </section>
+        <section>
+          <Catalog20Section onOpenMovie={openMovieModal} />
+        </section>
+        <section>
+          <CatalogAnimeSection onOpenMovie={openMovieModal} />
+        </section>
+        <section>
+          <CatalogSeriesSection onOpenMovie={openMovieModal} />
+        </section>
+        <section>
+          <CatalogThaiSection onOpenMovie={openMovieModal} />
+        </section>
+      </>
       {/* Promo 1 */}
       <section className="promo-section">
         <div
@@ -4744,16 +4557,17 @@ const SiteHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
     </header>
   );
 };
+
 const HeroSection = ({
   currentSlide,
-  slides = heroSlides,
+  slides,
 }: {
   currentSlide: number;
-  slides?: Movie[];
+  slides: Movie[];
 }) => {
   return (
     <section className={styles.hero}>
-      {slides.map((slide, index) => (
+      {(slides || []).map((slide, index) => (
         <div
           key={slide.id}
           className={`${styles.heroSlide} ${
@@ -4762,11 +4576,16 @@ const HeroSection = ({
         >
           <div
             className={styles.heroBackdrop}
-            style={{ backgroundImage: `url(${slide.backdropUrl})` }}
+            style={{
+              backgroundImage: `url(${slide.backdropUrl || slide.posterUrl})`,
+            }}
           />
           <div className={styles.heroOverlay} />
           <div className={styles.heroInner}>
-            <div className={styles.heroContent}>
+            <div
+              className={styles.heroContent}
+              style={{ overflow: "visible", paddingBottom: 24 }}
+            >
               <div
                 className={styles.heroTitleLogo}
                 aria-label={slide.title}
@@ -4778,14 +4597,24 @@ const HeroSection = ({
                   })`,
                 }}
               />
-              <p className={styles.heroDescription}>{slide.description}</p>
+              <p
+                className={styles.heroDescription}
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical" as any,
+                  overflow: "hidden",
+                }}
+              >
+                {slide.description}
+              </p>
               <div className={styles.heroActions}>
                 <button className={`${styles.ctaButton} ${styles.ctaPrimary}`}>
-                  <IconPlay className={styles.btnIcon} /> ดูหนัง
+                  <IconPlay className={styles.btnIcon} /> Watch Now
                 </button>
-                <button className={`${styles.ctaButton} ${styles.ctaGhost}`}>
+                {/* <button className={`${styles.ctaButton} ${styles.ctaGhost}`}>
                   <IconPlus className={styles.btnIcon} /> รายการของฉัน
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -4806,24 +4635,71 @@ const SloganSection = () => {
     </section>
   );
 };
-
 // Professional Movie Slider Section - 固定左侧大卡片 + 右侧循环小卡片
 const MovieSliderSection = ({
   onOpenMovie,
-  movies = movieSliderData,
-  title = "หนังใหม่มาแรง 2025",
 }: {
   onOpenMovie?: (movie: {
     title: string;
     poster: string;
     backdrop?: string;
     trailerUrl?: string;
+    year?: string | number;
+    runtime?: string;
+    imdb?: string | number;
+    ageRating?: string;
+    language?: string;
+    actors?: string[];
+    categories?: Array<{ label: string; href?: string }>;
+    tags?: string[];
+    description?: string;
+    descriptionHtml?: string;
   }) => void;
-  movies?: Movie[];
-  title?: string;
 }) => {
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const [currentMainMovie, setCurrentMainMovie] = useState(0);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Load movies from API and map to local Movie type
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch(
+          "http://localhost:4000/v1/movies?page=1&limit=24&sort=popular"
+        );
+        const json = await res.json();
+        const items = Array.isArray(json?.items) ? json.items : [];
+        const mapped: Movie[] = items.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          posterUrl: m.poster,
+          backdropUrl: m.backdrop ?? undefined,
+          trailerUrl: m.trailerUrl ?? undefined,
+          year: m.year,
+          duration: formatRuntime(m.runtime),
+          quality: undefined,
+          badgeText: undefined,
+          tags: m.tags ?? m.genres ?? [],
+          description: m.synopsis,
+          ageRating: m.ageRating,
+        }));
+        if (isMounted) {
+          setMovies(mapped);
+          setCurrentMainMovie(0);
+        }
+      } catch (e) {
+        // noop
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // GPU优化无缝循环 - 关键参数
   const CLONES = 10; // 克隆数量略增，防止在第3-4张时出现回跳变形
@@ -4832,25 +4708,16 @@ const MovieSliderSection = ({
   const timerRef = React.useRef<number | null>(null);
   const isPausedRef = React.useRef(false);
 
-  // 规范化输入数据，并生成右侧小卡数组：原始 + 克隆前 N 张
-  const normalizedMovies = React.useMemo(
-    () =>
-      (movies || []).map((m: any) => ({
-        ...m,
-        posterUrl: m?.posterUrl ?? m?.poster ?? m?.poster_url ?? m?.image ?? "",
-        backdropUrl: m?.backdropUrl ?? m?.backdrop ?? m?.backdrop_url ?? "",
-      })),
-    [movies]
-  );
-  const smallCards = React.useMemo(
-    () => normalizedMovies.concat(normalizedMovies.slice(0, CLONES)),
-    [normalizedMovies]
-  );
+  // 右侧小卡数组：原始 + 克隆前 N 张（来自 API）
+  const smallCards = React.useMemo(() => {
+    if (!movies.length) return [] as Movie[];
+    return movies.concat(movies.slice(0, CLONES));
+  }, [movies]);
 
   // 预加载下一张图片，避免切换时白一下
   useEffect(() => {
-    const baseLen = normalizedMovies.length || 1;
-    const next = normalizedMovies[(currentMainMovie + 1) % baseLen];
+    if (!movies.length) return;
+    const next = movies[(currentMainMovie + 1) % movies.length];
     if (next?.posterUrl) {
       const img = new Image();
       img.src = next.posterUrl;
@@ -4859,12 +4726,13 @@ const MovieSliderSection = ({
       const img = new Image();
       img.src = next.backdropUrl;
     }
-  }, [currentMainMovie, normalizedMovies]);
+  }, [currentMainMovie, movies]);
 
   // 步长计算更稳 + 监听尺寸变化
   useEffect(() => {
     const track = sliderRef.current;
     if (!track) return;
+    if (!movies.length) return;
 
     const computeStep = () => {
       // 每次移动一张完整卡片的距离，让上一张完全消失
@@ -4896,7 +4764,7 @@ const MovieSliderSection = ({
 
     const snapBack = () => {
       track.classList.add("ezm-noTransition");
-      indexRef.current = indexRef.current % normalizedMovies.length;
+      indexRef.current = indexRef.current % movies.length;
       track.style.transform = `translate3d(-${
         indexRef.current * stepRef.current
       }px,0,0)`;
@@ -4906,7 +4774,7 @@ const MovieSliderSection = ({
 
     const onTransitionEnd = (e: TransitionEvent) => {
       if (e.target !== track || e.propertyName !== "transform") return;
-      if (indexRef.current >= normalizedMovies.length) snapBack();
+      if (indexRef.current >= movies.length) snapBack();
     };
     track.addEventListener("transitionend", onTransitionEnd);
 
@@ -4917,8 +4785,8 @@ const MovieSliderSection = ({
       }
 
       // 下一张的图先解码，切换时不"白一下"
-      const nextIdx = (indexRef.current + 1) % normalizedMovies.length;
-      const preload = normalizedMovies[nextIdx];
+      const nextIdx = (indexRef.current + 1) % movies.length;
+      const preload = movies[nextIdx];
       if (preload?.posterUrl) {
         const im = new Image();
         im.src = preload.posterUrl;
@@ -4963,7 +4831,7 @@ const MovieSliderSection = ({
       ro.disconnect();
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [movies]);
 
   // 悬停暂停不触发 React 重渲染
   const handleMouseEnter = () => {
@@ -4976,12 +4844,18 @@ const MovieSliderSection = ({
   return (
     <section className={styles.movieSliderSection}>
       <div className={styles.sliderContainer}>
-        <h3 className={styles.sectionTitle}>{title}</h3>
+        <h3 className={styles.sectionTitle}>Trending New Movies 2025</h3>
         <div className={styles.sliderWrapper}>
           {/* 固定的左侧大卡片 */}
           <div className={styles.fixedMainCard}>
             <MainMovieCard
-              movie={movies[currentMainMovie]}
+              movie={
+                movies[currentMainMovie] ?? {
+                  id: "placeholder",
+                  title: "",
+                  posterUrl: "",
+                }
+              }
               isTransitioning={false}
               onOpenMovie={onOpenMovie}
             />
@@ -5018,10 +4892,20 @@ const MainMovieCard = ({
     poster: string;
     backdrop?: string;
     trailerUrl?: string;
+    year?: string | number;
+    runtime?: string;
+    imdb?: string | number;
+    ageRating?: string;
+    language?: string;
+    actors?: string[];
+    categories?: Array<{ label: string; href?: string }>;
+    tags?: string[];
+    description?: string;
+    descriptionHtml?: string;
   }) => void;
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
-  const [displayMovie, setDisplayMovie] = useState(movie);
+  const [displayMovie, setDisplayMovie] = useState<any>(movie);
 
   // 监听电影切换，添加动画效果
   useEffect(() => {
@@ -5046,8 +4930,12 @@ const MainMovieCard = ({
           title: displayMovie.title,
           poster: displayMovie.posterUrl,
           backdrop: displayMovie.posterUrl,
-          trailerUrl:
-            "https://www.youtube.com/embed/oKiYuIsPxYk?autoplay=1&mute=1",
+          trailerUrl: displayMovie.trailerUrl,
+          year: displayMovie.year,
+          runtime: displayMovie.duration,
+          ageRating: displayMovie.ageRating,
+          tags: displayMovie.tags,
+          description: displayMovie.description,
         })
       }
     >
@@ -5089,36 +4977,45 @@ const MainMovieCard = ({
           {/* 右侧内容 */}
           <div className="-block-content">
             <h2 className="-title">{displayMovie.title}</h2>
-
             <div className="-info">
               {displayMovie.year && (
-                <span className="-gap">ปี {displayMovie.year}</span>
+                <span className="-gap">{displayMovie.year}</span>
               )}
 
               {displayMovie.ageRating && (
                 <img
                   alt={displayMovie.ageRating}
                   className="-gap -age-img"
-                  width={37}
-                  height={23}
-                  src={`/build/web/ez-movie/img/rate-${displayMovie.ageRating}.png`}
+                  width={23}
+                  height={16}
+                  src={
+                    new URL(
+                      `../../images/rate-${displayMovie.ageRating}.png`,
+                      import.meta.url
+                    ).href
+                  }
                   decoding="async"
                 />
               )}
 
               {displayMovie.duration && (
-                <span className="-gap">{displayMovie.duration}</span>
-              )}
-
-              {displayMovie.quality && (
-                <img
-                  alt={displayMovie.quality}
-                  className="-gap -hd-img"
-                  width={30}
-                  height={22}
-                  src="/build/web/ez-movie/img/movie-detail-hd.png"
-                  decoding="async"
-                />
+                <span
+                  className="-gap"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  {displayMovie.duration}
+                  <img
+                    src={hdIconUrl}
+                    alt="HD"
+                    width={22}
+                    height={16}
+                    style={{ display: "inline-block" }}
+                  />
+                </span>
               )}
             </div>
 
@@ -5127,7 +5024,6 @@ const MainMovieCard = ({
                 <p>{displayMovie.description}</p>
               </div>
             )}
-
             {displayMovie.tags && displayMovie.tags.length > 0 && (
               <div className="-category">
                 {displayMovie.tags.slice(0, 10).map((t) => (
@@ -5137,11 +5033,10 @@ const MainMovieCard = ({
                 ))}
               </div>
             )}
-
             <div className="-play-favorite">
               <a href="#" className="btn -btn-play">
                 <i className="-ic" aria-hidden="true" />
-                <span className="-text">ดูหนัง</span>
+                <span className="-text">Watch</span>
               </a>
             </div>
           </div>
@@ -5150,7 +5045,6 @@ const MainMovieCard = ({
     </div>
   );
 };
-
 const Top10WeeklyCarousel: React.FC<{
   onOpenMovie?: (m: {
     title: string;
@@ -5158,16 +5052,15 @@ const Top10WeeklyCarousel: React.FC<{
     backdrop?: string;
     trailerUrl?: string;
   }) => void;
-  movies?: any[];
-}> = ({ onOpenMovie, movies = top10Items }) => {
+}> = ({ onOpenMovie }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "start", dragFree: false, duration: 24 },
     [Autoplay({ delay: 3500, stopOnInteraction: false })]
   );
 
   const pages = React.useMemo(
-    () => [movies.slice(0, 5), movies.slice(5, 10)],
-    [movies]
+    () => [top10Items.slice(0, 5), top10Items.slice(5, 10)],
+    []
   );
 
   const scrollPrev = React.useCallback(() => {
@@ -5194,7 +5087,7 @@ const Top10WeeklyCarousel: React.FC<{
       {/* Mobile: horizontal scroll with desktop-style number overlay */}
       <div className="x-top10-mobileScroll">
         <div className="x-top10-mobileTrack">
-          {movies.map((m, idx) => (
+          {top10Items.map((m, idx) => (
             <div
               className="x-item-wrapper-movie x-top5-pair x-top10-m-pair"
               key={m.id}
@@ -5343,9 +5236,7 @@ const Catalog20Section: React.FC<{
     backdrop?: string;
     trailerUrl?: string;
   }) => void;
-  movies?: any[];
-  title?: string;
-}> = ({ onOpenMovie, movies = catalog24, title = "หนังมาใหม่" }) => {
+}> = ({ onOpenMovie }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: false,
@@ -5371,11 +5262,11 @@ const Catalog20Section: React.FC<{
 
   // Preload
   React.useEffect(() => {
-    movies.forEach((m) => {
+    catalog24.forEach((m) => {
       const im = new Image();
       im.src = m.poster;
     });
-  }, [movies]);
+  }, []);
 
   // Toggle left padding: at start use container padding; once scrolled, go full-width
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -5393,7 +5284,7 @@ const Catalog20Section: React.FC<{
         <div className="x-category-movie-title">
           <div className="-category-inner-container">
             <div className="title-with-button">
-              <h2 className="-title">{title}</h2>
+              <h2 className="-title">หนังมาใหม่</h2>
               <div className="-see-all-wrapper">
                 <a
                   href="/หนังฝรั่ง"
@@ -5412,7 +5303,7 @@ const Catalog20Section: React.FC<{
       {/* Mobile: horizontal scroll with larger cards */}
       <div className="x-catalog-mobileScroll">
         <div className="x-catalog-mobileTrack">
-          {movies.slice(0, 12).map((m) => (
+          {catalog24.slice(0, 12).map((m) => (
             <div
               className="x-catalog-mobileCard"
               key={`mobile-${m.id}`}
@@ -5445,7 +5336,7 @@ const Catalog20Section: React.FC<{
         ref={emblaRef}
       >
         <div className="embla-cat__container">
-          {movies.map((m) => (
+          {catalog24.map((m) => (
             <div className="embla-cat__slide" key={m.id}>
               <div
                 className="x-catalog-card"
@@ -5530,19 +5421,13 @@ const CatalogAnimeSection: React.FC<{
     backdrop?: string;
     trailerUrl?: string;
   }) => void;
-  movies?: any[];
-  title?: string;
-}> = ({
-  onOpenMovie,
-  movies = catalog24,
-  title = "อนิเมะ (การ์ตูน) Anime",
-}) => (
+}> = ({ onOpenMovie }) => (
   <section className="x-catalog">
     <div className="container">
       <div className="x-category-movie-title">
         <div className="-category-inner-container">
           <div className="title-with-button">
-            <h2 className="-title">{title}</h2>
+            <h2 className="-title">อนิเมะ (การ์ตูน) Anime</h2>
             <div className="-see-all-wrapper">
               <a
                 href="/อนิเมะ"
@@ -5561,7 +5446,7 @@ const CatalogAnimeSection: React.FC<{
     {/* Mobile: horizontal scroll with larger cards */}
     <div className="x-catalog-mobileScroll">
       <div className="x-catalog-mobileTrack">
-        {movies.slice(0, 12).map((m) => (
+        {catalog24.slice(0, 12).map((m) => (
           <div
             className="x-catalog-mobileCard"
             key={`anime-mobile-${m.id}`}
@@ -5590,7 +5475,7 @@ const CatalogAnimeSection: React.FC<{
     </div>
 
     {/* Reuse same carousel */}
-    {CatalogCarouselBody(onOpenMovie, movies)}
+    {CatalogCarouselBody(onOpenMovie)}
   </section>
 );
 
@@ -5602,15 +5487,13 @@ const CatalogSeriesSection: React.FC<{
     backdrop?: string;
     trailerUrl?: string;
   }) => void;
-  movies?: any[];
-  title?: string;
-}> = ({ onOpenMovie, movies = catalog24, title = "ซีรี่ย์" }) => (
+}> = ({ onOpenMovie }) => (
   <section className="x-catalog">
     <div className="container">
       <div className="x-category-movie-title">
         <div className="-category-inner-container">
           <div className="title-with-button">
-            <h2 className="-title">{title}</h2>
+            <h2 className="-title">ซีรี่ย์</h2>
             <div className="-see-all-wrapper">
               <a
                 href="/ซีรี่ย์"
@@ -5629,9 +5512,9 @@ const CatalogSeriesSection: React.FC<{
     {/* Mobile: horizontal scroll with larger cards */}
     <div className="x-catalog-mobileScroll">
       <div className="x-catalog-mobileTrack">
-        {movies.slice(0, 12).map((m) => (
+        {catalog24.slice(0, 12).map((m) => (
           <div
-            className="x-catalog-movieCard"
+            className="x-catalog-mobileCard"
             key={`series-mobile-${m.id}`}
             onClick={() =>
               onOpenMovie?.({
@@ -5660,7 +5543,6 @@ const CatalogSeriesSection: React.FC<{
     {CatalogCarouselBody(onOpenMovie)}
   </section>
 );
-
 // Reuse catalog for Thai Movies
 const CatalogThaiSection: React.FC<{
   onOpenMovie?: (m: {
@@ -5669,15 +5551,13 @@ const CatalogThaiSection: React.FC<{
     backdrop?: string;
     trailerUrl?: string;
   }) => void;
-  movies?: any[];
-  title?: string;
-}> = ({ onOpenMovie, movies = catalog24, title = "หนังไทย" }) => (
+}> = ({ onOpenMovie }) => (
   <section className="x-catalog">
     <div className="container">
       <div className="x-category-movie-title">
         <div className="-category-inner-container">
           <div className="title-with-button">
-            <h2 className="-title">{title}</h2>
+            <h2 className="-title">หนังไทย</h2>
             <div className="-see-all-wrapper">
               <a
                 href="/หนังไทย"
@@ -5696,7 +5576,7 @@ const CatalogThaiSection: React.FC<{
     {/* Mobile: horizontal scroll with larger cards */}
     <div className="x-catalog-mobileScroll">
       <div className="x-catalog-mobileTrack">
-        {movies.slice(0, 12).map((m) => (
+        {catalog24.slice(0, 12).map((m) => (
           <div
             className="x-catalog-mobileCard"
             key={`thai-mobile-${m.id}`}
@@ -5735,8 +5615,7 @@ function CatalogCarouselBody(
     poster: string;
     backdrop?: string;
     trailerUrl?: string;
-  }) => void,
-  movies = catalog24
+  }) => void
 ) {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
@@ -5756,11 +5635,11 @@ function CatalogCarouselBody(
   }, [emblaApi]);
   const [isScrolled, setIsScrolled] = React.useState(false);
   React.useEffect(() => {
-    movies.forEach((m) => {
+    catalog24.forEach((m) => {
       const im = new Image();
       im.src = m.poster;
     });
-  }, [movies]);
+  }, []);
   React.useEffect(() => {
     if (!emblaApi) return;
     const update = () => setIsScrolled(emblaApi.canScrollPrev());
@@ -5774,7 +5653,7 @@ function CatalogCarouselBody(
       ref={emblaRef}
     >
       <div className="embla-cat__container">
-        {movies.map((m) => (
+        {catalog24.map((m) => (
           <div className="embla-cat__slide" key={`dup-${m.id}`}>
             <div
               className="x-catalog-card"
@@ -5872,7 +5751,7 @@ const FeaturesSection = () => {
       id: 3,
       title: "หนังดีมีคุณภาพ",
       description:
-        "หนังดีมีล้อง เดียวน ภาพชุดเสียงระดับ Full HD ถึงขนาดใหญ่ Soundtrack กระคิ่นเดียวน ครอบคุณเรื่มรา พร้อมรันเลียนหว์วีสมใส ชัดชาง ดีดามากสุนใจดุหาติดมเกม่างลุดีรา เรามีครับองเมื่มันป์พพันอันเอไอท์ระบบ 4K และไ้วหนีดพร์จ์นอูในรอแผ่น ความบรับในออ ม้าสนันในสำกรับที่วิจาร่วงหลอกระบบเสตรัม ถิ่มาคำหีจาก Ezmovie",
+        "หนังดีมีล้อง เดียวน ภาพชุดเสียงระดับ Full HD ถึงขนาดใหญ่ Soundtrack กระคิ่นเดียวน ครอบคุณเรื่มรา พร้อมรันเลียนหว์วีสมใส ชัดชาง ดีดามากสุนใจดุหาติดมเกม่างลุดีรา เรามีครับองเมื่มันพพันอันเอไอท์ระบบ 4K และไ้วหนีดพร์จ์นอูในรอแผ่น ความบรับในออ ม้าสนันในสำกรับที่วิจาร่วงหลอกระบบเสตรัม ถิ่มาคำหีจาก Ezmovie",
       image:
         "https://ezmovie.me/media/cache/strip/202411/block/50545bea1c5c7a2f7ad852552a72b433.png",
     },
@@ -6140,7 +6019,6 @@ const SiteFooter = () => {
     </footer>
   );
 };
-
 // Lightweight movie modal:
 const MovieModal: React.FC<{
   open: boolean;
@@ -6179,16 +6057,31 @@ const MovieModal: React.FC<{
             }}
           >
             <div className="-embed">
-              <iframe
-                className="-iframe"
-                src={movie.trailerUrl || ""}
-                title={movie.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {movie.trailerUrl
+                ? (() => {
+                    const raw = movie.trailerUrl || "";
+                    // Transform YouTube watch URLs to embed URLs
+                    const ytMatch = raw.match(
+                      /(?:youtu\.be\/|watch\?v=|embed\/)([^#&?]{11})/
+                    );
+                    const embed = ytMatch
+                      ? `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1`
+                      : raw;
+                    return (
+                      <iframe
+                        className="-iframe"
+                        src={embed}
+                        title={movie.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    );
+                  })()
+                : null}
             </div>
           </div>
 
+          {/* Todo: To do: API implementation to backoffice control banner */}
           {/* Movie info container */}
           <div className="-movie-info-container">
             <div className="-container">
@@ -6258,7 +6151,7 @@ const MovieModal: React.FC<{
                         >
                           <path d="M8 5v14l11-7z" fill="currentColor" />
                         </svg>
-                        ดูหนัง
+                        Watch
                       </a>
                     </div>
                   </div>
@@ -6278,13 +6171,18 @@ const MovieModal: React.FC<{
                       {/* Basic info badges */}
                       <div className="mb-2 -box">
                         {movie.year && (
-                          <span className="-gap">ปี {movie.year}</span>
+                          <span className="-gap">{movie.year}</span>
                         )}
                         {movie.ageRating && (
                           <img
                             alt={movie.ageRating}
-                            className="-gap -age-img"
-                            src="/build/web/ez-movie/img/rate-13+.png"
+                            className="-age-img"
+                            src={
+                              new URL(
+                                `../../images/rate-${movie.ageRating}.png`,
+                                import.meta.url
+                              ).href
+                            }
                           />
                         )}
                         {movie.runtime && (
@@ -6292,8 +6190,11 @@ const MovieModal: React.FC<{
                         )}
                         <img
                           alt="HD"
-                          className="-gap -hd-img"
-                          src="/build/web/ez-movie/img/movie-detail-hd.png"
+                          className="-hd-img"
+                          src={
+                            new URL(`../../images/hd-icon.png`, import.meta.url)
+                              .href
+                          }
                         />
                         {movie.imdb && (
                           <span className="badge -badge rounded-0">
@@ -6305,14 +6206,14 @@ const MovieModal: React.FC<{
                       {/* Language */}
                       {movie.language && (
                         <div className="mb-2">
-                          <span className="mr-5">เสียง : {movie.language}</span>
+                          <span className="mr-5">Audio: {movie.language}</span>
                         </div>
                       )}
 
                       {/* Actors */}
                       {movie.actors && movie.actors.length > 0 && (
                         <div className="-tags -box -actors">
-                          <span className="-title">นักแสดง :</span>
+                          <span className="-title">Cast:</span>
                           {movie.actors.map((actor) => (
                             <a key={actor} href="#" className="badge -badge">
                               {actor}
@@ -6324,7 +6225,7 @@ const MovieModal: React.FC<{
                       {/* Categories */}
                       {movie.categories && movie.categories.length > 0 && (
                         <div className="mb-2">
-                          ประเภทหนัง :
+                          Categories:
                           {movie.categories.map((cat, idx) => (
                             <span key={`${cat.label}-${idx}`}>
                               <a href={cat.href || "#"} className="-category">
@@ -6339,7 +6240,7 @@ const MovieModal: React.FC<{
                       {/* Tags */}
                       {movie.tags && movie.tags.length > 0 && (
                         <div className="-tags -box mb-2">
-                          <span className="-title">tag :</span>
+                          <span className="-title">Tags:</span>
                           {movie.tags.map((tag) => (
                             <a key={tag} href="#" className="badge -badge">
                               {tag}
@@ -6352,7 +6253,7 @@ const MovieModal: React.FC<{
                     {/* Description */}
                     <div className="-right-column -show-more js-show-more">
                       <div className="-short-detail">
-                        <div className="-title">เรื่องย่อ</div>
+                        <div className="-title">Synopsis</div>
                         <div
                           className="-detail"
                           dangerouslySetInnerHTML={{
@@ -6378,12 +6279,12 @@ const MovieModal: React.FC<{
                       const isExpanded = detail.style.maxHeight === "none";
                       detail.style.maxHeight = isExpanded ? "120px" : "none";
                       button.innerHTML = isExpanded
-                        ? 'รายละเอียดหนัง <i class="fas fa-angle-down"></i>'
-                        : 'แสดงน้อยลง <i class="fas fa-angle-up"></i>';
+                        ? 'Details <i class="fas fa-angle-down"></i>'
+                        : 'Show less <i class="fas fa-angle-up"></i>';
                     }
                   }}
                 >
-                  รายละเอียดหนัง <i className="fas fa-angle-down"></i>
+                  Details <i className="fas fa-angle-down"></i>
                 </button>
               </div>
             </div>
@@ -6394,27 +6295,27 @@ const MovieModal: React.FC<{
         /* Modal base styles */
         .x-modal { position: fixed; inset: 0; z-index: 9999; }
         .x-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
-        .x-modal-dialog { 
-          position: relative; 
-          max-width: min(1200px, 95vw); 
-          margin: 2vh auto; 
-          background: #1a1d29; 
-          border-radius: 16px; 
-          overflow: hidden; 
+        .x-modal-dialog {
+          position: relative;
+          max-width: min(1200px, 95vw);
+          margin: 2vh auto;
+          background: #1a1d29;
+          border-radius: 16px;
+          overflow: hidden;
           box-shadow: 0 25px 100px rgba(0,0,0,0.8);
         }
-        .x-modal-close { 
-          position: absolute; 
-          top: 12px; 
-          right: 16px; 
-          background: rgba(0,0,0,0.7); 
-          border: 0; 
-          color: #fff; 
-          font-size: 24px; 
-          width: 40px; 
-          height: 40px; 
-          border-radius: 50%; 
-          cursor: pointer; 
+        .x-modal-close {
+          position: absolute;
+          top: 12px;
+          right: 16px;
+          background: rgba(0,0,0,0.7);
+          border: 0;
+          color: #fff;
+          font-size: 24px;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          cursor: pointer;
           z-index: 10;
           display: flex;
           align-items: center;
@@ -6424,48 +6325,48 @@ const MovieModal: React.FC<{
         .x-modal-body { max-height: 90vh; overflow-y: auto; }
 
         /* Video section */
-        .-teaser-container { 
-          background-size: cover; 
-          background-position: center; 
+        .-teaser-container {
+          background-size: cover;
+          background-position: center;
           position: relative;
         }
         .-embed { position: relative; padding-top: 38%; }  /* 从42%再调小到38% */
         .-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
         /* Movie info container */
-        .-movie-info-container { 
-          background: linear-gradient(135deg, #1a1d29 0%, #23262f 100%); 
+        .-movie-info-container {
+          background: linear-gradient(135deg, #1a1d29 0%, #23262f 100%);
           padding: 0;
         }
         .-container { padding: 24px 32px; }
 
         /* Banner section */
-        .x-banner-website-container { 
-          margin-bottom: 36px; 
+        .x-banner-website-container {
+          margin-bottom: 36px;
           padding-bottom: 32px;
           border-bottom: 1px solid rgba(255,255,255,0.12);
         }
-        .-banner-grid { 
-          display: flex; 
+        .-banner-grid {
+          display: flex;
           justify-content: center;
           align-items: center;
-          gap: clamp(16px, 3vw, 24px); 
+          gap: clamp(16px, 3vw, 24px);
           flex-wrap: wrap;
         }
-        .-banner-item { 
-          display: block; 
+        .-banner-item {
+          display: block;
           transition: transform 0.3s ease;
           flex: 1 1 auto;
           min-width: 200px;
           max-width: 280px;
         }
         .-banner-item:hover { transform: scale(1.05); }
-        .-banner-item-img { 
-          height: auto; 
-          width: 100%; 
+        .-banner-item-img {
+          height: auto;
+          width: 100%;
           max-width: 280px;
           min-width: 200px;
-          object-fit: contain; 
+          object-fit: contain;
           border-radius: 12px;
           background: transparent;
           padding: 0;
@@ -6474,18 +6375,18 @@ const MovieModal: React.FC<{
 
         /* Title and button section */
         .x-movie-show-info { color: #e8ecf4; }
-        .-title-and-button { 
-          display: grid; 
-          grid-template-columns: 1fr auto; 
-          align-items: center; 
-          gap: 24px; 
+        .-title-and-button {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          gap: 24px;
           margin-bottom: 32px;
         }
-        .-head-title { 
-          font-size: 32px; 
-          font-weight: 700; 
-          margin: 0; 
-          color: #ffffff; 
+        .-head-title {
+          font-size: 32px;
+          font-weight: 700;
+          margin: 0;
+          color: #ffffff;
           line-height: 1.2;
         }
         .btn.btn-primary.-btn-icon {
@@ -6523,48 +6424,48 @@ const MovieModal: React.FC<{
         .-ic.-play { display:inline-block; vertical-align: middle; }
 
         /* Info wrapper */
-        .-info-wrapper { 
-          display: grid; 
-          grid-template-columns: 250px 1fr; 
-          gap: 32px; 
+        .-info-wrapper {
+          display: grid;
+          grid-template-columns: 250px 1fr;
+          gap: 32px;
           align-items: start;
         }
-        .-image-cover img { 
-          width: 250px; 
-          height: auto; 
-          border-radius: 16px; 
+        .-image-cover img {
+          width: 250px;
+          height: auto;
+          border-radius: 16px;
           box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
 
         /* Content section */
-        .-content-section { 
-          display: grid; 
-          grid-template-columns: 1fr 1fr; 
+        .-content-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
           gap: 32px;
         }
 
         /* Left column - badges and info */
         .-left-column .mb-2 { margin-bottom: 16px; }
         .-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .-gap { 
-          background: rgba(255,255,255,0.1); 
-          color: #d1d9e6; 
-          border-radius: 8px; 
-          padding: 6px 12px; 
+        .-gap {
+          background: rgba(255,255,255,0.1);
+          color: #d1d9e6;
+          border-radius: 8px;
+          padding: 6px 12px;
           font-size: 13px;
           font-weight: 500;
         }
-        .-age-img, .-hd-img { 
-          height: 24px; 
-          width: auto; 
+        .-age-img, .-hd-img {
+          height: 24px;
+          width: auto;
           object-fit: contain;
         }
-        .badge.-badge { 
-          background: rgba(229, 9, 20, 0.2); 
-          color: #ff6b7a; 
+        .badge.-badge {
+          background: rgba(229, 9, 20, 0.2);
+          color: #ff6b7a;
           border: 1px solid rgba(229, 9, 20, 0.3);
-          border-radius: 8px; 
-          padding: 6px 12px; 
+          border-radius: 8px;
+          padding: 6px 12px;
           font-size: 13px;
           font-weight: 500;
           margin-left: 8px;
@@ -6577,13 +6478,13 @@ const MovieModal: React.FC<{
         /* Tags sections */
         .-tags { margin: 12px 0; line-height: 1.4; }
         .-tags.-actors .-title,
-        .-tags .-title { 
-          margin-right: 8px; 
-          color: #8a95a8; 
+        .-tags .-title {
+          margin-right: 8px;
+          color: #8a95a8;
           font-weight: 600;
         }
-        .-tags .badge.-badge { 
-          margin: 0 4px 4px 0; 
+        .-tags .badge.-badge {
+          margin: 0 4px 4px 0;
           background: rgba(255,255,255,0.08);
           color: #d1d9e6;
           border: 1px solid rgba(255,255,255,0.15);
@@ -6591,15 +6492,15 @@ const MovieModal: React.FC<{
           font-size: 12px;
           line-height: 1.3;
         }
-        .-tags .badge.-badge:hover { 
+        .-tags .badge.-badge:hover {
           background: rgba(255,255,255,0.15);
           transform: translateY(-1px);
         }
 
         /* Categories */
-        .-category { 
-          color: #6db4ff; 
-          text-decoration: none; 
+        .-category {
+          color: #6db4ff;
+          text-decoration: none;
           margin-right: 4px;
           font-size: 14px;
           transition: color 0.3s ease;
@@ -6607,80 +6508,80 @@ const MovieModal: React.FC<{
         .-category:hover { color: #8dc8ff; }
 
         /* Right column - description */
-        .-right-column .-short-detail .-title { 
-          font-weight: 700; 
+        .-right-column .-short-detail .-title {
+          font-weight: 700;
           font-size: 18px;
-          margin-bottom: 12px; 
+          margin-bottom: 12px;
           color: #ffffff;
         }
-        .-detail { 
-          color: #b8c5d6; 
-          font-size: 15px; 
-          line-height: 1.7; 
-          max-height: 120px; 
+        .-detail {
+          color: #b8c5d6;
+          font-size: 15px;
+          line-height: 1.7;
+          max-height: 120px;
           overflow: hidden;
           transition: max-height 0.3s ease;
         }
 
         /* Show more button */
-        .-btn-show-more { 
-          margin-top: 24px; 
-          background: rgba(255,255,255,0.08); 
-          color: #d1d9e6; 
+        .-btn-show-more {
+          margin-top: 24px;
+          background: rgba(255,255,255,0.08);
+          color: #d1d9e6;
           border: 1px solid rgba(255,255,255,0.15);
-          padding: 12px 20px; 
-          border-radius: 10px; 
+          padding: 12px 20px;
+          border-radius: 10px;
           cursor: pointer;
           font-size: 14px;
           font-weight: 500;
           transition: all 0.3s ease;
         }
-        .-btn-show-more:hover { 
+        .-btn-show-more:hover {
           background: rgba(255,255,255,0.15);
           transform: translateY(-1px);
         }
 
         /* Responsive design */
         @media (max-width: 1024px) {
-          .-banner-item { 
+          .-banner-item {
             min-width: 180px;
             max-width: 240px;
           }
         }
-        
+
         @media (max-width: 768px) {
           .-container { padding: 16px 20px; }
-          .-title-and-button { 
-            grid-template-columns: 1fr; 
-            text-align: center; 
+          .-title-and-button {
+            grid-template-columns: 1fr;
+            text-align: center;
             gap: 16px;
           }
           .-head-title { font-size: 24px; }
-          .-info-wrapper { 
-            grid-template-columns: 1fr; 
+          .-info-wrapper {
+            grid-template-columns: 1fr;
             gap: 24px;
           }
-          .-content-section { 
-            grid-template-columns: 1fr; 
+          .-content-section {
+            grid-template-columns: 1fr;
             gap: 20px;
           }
           .-image-cover { text-align: center; }
           .-image-cover img { width: 200px; }
-          .-banner-item { 
+          .-banner-item {
             min-width: 150px;
             max-width: 200px;
           }
-          .-banner-item-img { 
+          .-banner-item-img {
             border-radius: 10px;
           }
         }
-        
+
         @media (max-width: 480px) {
-          .-banner-grid { 
+          .-banner-grid {
             flex-direction: column;
             gap: 12px;
           }
-          .-banner-item { 
+          .-banner-item {
             min-width: 160px;
             max-width: 220px;
           }
