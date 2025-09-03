@@ -204,7 +204,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/countries?page=1&limit=1000&sortBy=name&sortOrder=asc`,
           {
             headers: {
@@ -246,7 +246,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/genres?page=1&limit=1000&sortBy=genreName&sortOrder=asc`,
           {
             headers: {
@@ -289,7 +289,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/tags?page=1&limit=1000&sortBy=tagName&sortOrder=asc`,
           {
             headers: {
@@ -332,7 +332,7 @@ export default function MovieModal({
 
         const response = await fetch(
           `${
-            process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+            process.env.NEXT_PUBLIC_API_BASE || "http://51.79.254.237:4000"
           }/v1/admin/cast?page=1&limit=1000&sortBy=castName&sortOrder=asc`,
           {
             headers: {
