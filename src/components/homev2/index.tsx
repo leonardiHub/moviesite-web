@@ -640,8 +640,9 @@ const css = `
   --gap: clamp(16px, 2.5vw, 48px);
   --pairW: calc((100vw - (var(--pad-x) * 2) - (var(--gap) * 4)) / 5);
   --cardW: calc(var(--pairW) * 0.78);                  /* 海报宽度 */
-  --numLeftGap: clamp(8px, calc(var(--pairW) * .03), 16px);  /* 进一步减少左边空隙，让布局更紧凑 */
-  --numOverlap: clamp(8px, calc(var(--pairW) * .05), 24px); /* 调大=更压住；调小=更贴边 */
+  --numColW: calc(var(--pairW) * 0.22);                /* 数字列固定宽度，防止挤压 */
+  --numLeftGap: clamp(8px, calc(var(--pairW) * .03), 16px);  /* 左侧留白 */
+  --numOverlap: clamp(8px, calc(var(--pairW) * .05), 24px);  /* 覆盖重叠度 */
   --numThinX: 1.04;   /* 数字横向变细（越小越细） */
   --numTallY: 1.16;  /* 数字纵向拉长（越大越高） */
   background:#0a0c11;
@@ -665,7 +666,7 @@ const css = `
 /* 用 grid 排两列：左(数字) + 右(海报)；两者之间绝对无缝 */
 .x-top5-pair{
   display:grid !important;
-  grid-template-columns: minmax(0,1fr) var(--cardW);
+  grid-template-columns: var(--numColW) var(--cardW);
   align-items:end;
   column-gap:0 !important;
   padding-left:0 !important;                /* 🔑 不再给整组加左内边距 */
@@ -674,9 +675,9 @@ const css = `
 
 /* 🔑 把"左侧缝隙"放在数字自己身上；右侧微缝消除 */
 .x-top5-pair .-number{
-  margin-left: var(--numLeftGap) !important;/* 只在左侧留缝 */
-  margin-right: calc(var(--numOverlap) * -1) !important; /* 原本是 -2px，现在用变量控制 */
-  justify-self:end;                         /* 右贴海报 */
+  margin-left: var(--numLeftGap) !important;/* 左侧留缝 */
+  margin-right: calc(var(--numOverlap) * -1) !important; /* 与海报轻微叠压 */
+  justify-self:end;                         /* 数字靠右对齐，贴近海报 */
   text-align:right;
   line-height:.82;
   font-family:"FC Iconic Text","Helvetica Neue",Helvetica,Arial,sans-serif;
