@@ -79,6 +79,7 @@ export class MoviesController {
       countryId?: string;
       genreName?: string;
       tagName?: string;
+      castName?: string;
       countryCode?: string;
       countryName?: string;
     }
@@ -117,7 +118,13 @@ export class MoviesController {
     // Resolve friendly names to IDs if provided
     let effectiveGenreId = q.genreId;
     let effectiveCountryId = q.countryId;
-    if (!effectiveTagId || !effectiveGenreId || !effectiveCountryId) {
+    let effectiveCastId = q.castId;
+    if (
+      !effectiveTagId ||
+      !effectiveGenreId ||
+      !effectiveCountryId ||
+      !effectiveCastId
+    ) {
       try {
         const prismaModule = await import("../prisma/prisma.service");
         const { PrismaService } = prismaModule as any;
@@ -154,6 +161,12 @@ export class MoviesController {
               });
           if (c) effectiveCountryId = c.id;
         }
+        if (!effectiveCastId && q.castName) {
+          const p = await prisma.person.findFirst({
+            where: { name: { equals: q.castName, mode: "insensitive" } },
+          });
+          if (p) effectiveCastId = p.id;
+        }
       } catch (_) {}
     }
 
@@ -166,7 +179,7 @@ export class MoviesController {
       sortOrder: "desc",
       genreId: effectiveGenreId,
       tagId: effectiveTagId,
-      castId: q.castId,
+      castId: effectiveCastId,
       countryId: effectiveCountryId,
     });
 
@@ -186,11 +199,15 @@ export class MoviesController {
         backdrop:
           (m.artworks || []).find((a: any) => a.kind === "backdrop")?.url ||
           null,
-        genres: (m.genres || []).map((g: any) => g.genre?.name).filter(Boolean),
-        tags: (m.tags || []).map((t: any) => t.tag?.name).filter(Boolean),
+        genres: (m.genres || [])
+          .map((g: any) => ({ id: g.genre?.id, name: g.genre?.name }))
+          .filter((x: any) => x.id && x.name),
+        tags: (m.tags || [])
+          .map((t: any) => ({ id: t.tag?.id, name: t.tag?.name }))
+          .filter((x: any) => x.id && x.name),
         casts: (m.credits || [])
-          .map((c: any) => c.person?.name)
-          .filter(Boolean),
+          .map((c: any) => ({ id: c.person?.id, name: c.person?.name }))
+          .filter((x: any) => x.id && x.name),
       })),
       page: result.page,
       limit: result.limit,

@@ -19,6 +19,7 @@ type Movie = {
   tags?: string[];
   description?: string;
   ageRating?: "13+" | "15+" | "16+" | "18+"; // 新增年龄分级
+  casts?: string[];
 };
 
 // Asset urls
@@ -489,7 +490,6 @@ const css = `
   scrollbar-width: thin;
   scrollbar-color: rgba(35, 35, 47, 0.8) rgba(0, 0, 0, 0.1);
 }
-
 :root {
   --bg: #0b0d12;
   --panel: #12141b;
@@ -647,7 +647,6 @@ const css = `
   background:#0a0c11;
   padding: 0 0 56px;   /* 完全移除上间距，紧贴上一个区块 */
 }
-
 .x-top5 .-category-inner-container{
   padding: 0 var(--pad-x);
   margin-bottom: 16px; /* 默认下方间距 */
@@ -1292,9 +1291,7 @@ img.img-fluid.-image,
   margin-bottom: 16px;  /* 进一步缩小下边距 */
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
-
 /* 手机版本标题调小并靠左 - 已移到文件末尾统一处理 */
-
 /* Top10标题也统一样式 */
 h2.-title {
   font-size: 24px;      /* 放大到与上面一致 */
@@ -1885,7 +1882,6 @@ h2.-title {
     height: 36px;
   }
 }
-
 /* 赞助 LOGO 条（桌面显示） */
 .ezm-show-lg {
   display: none;
@@ -1942,7 +1938,6 @@ h2.-title {
   background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   margin: 0 6px;
 }
-
 /* LINE图标样式 */
 .${styles.lineImg} {
   height: 32px;
@@ -2386,7 +2381,6 @@ h2.-title {
   color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
-
 .${styles.mainCardDetails} p {
   color: rgba(255, 255, 255, 0.9);
   font-size: 13px;     /* 进一步大幅缩小 */
@@ -2589,7 +2583,6 @@ h2.-title {
 .${styles.movieCard}:hover .${styles.cardPoster}::after {
   opacity: 1;
 }
-
 .${styles.cardTextBlock} {
   flex: 1;
   display: flex;
@@ -2882,7 +2875,6 @@ h2.-title {
     font-size: 32px;  /* 从45px缩小到32px */
   }
 }
-
 @media (max-width: 640px) {
   .${styles.headerInner} {
     height: 48px;
@@ -3232,7 +3224,6 @@ h2.-title {
   flex: 1;
   max-width: 600px;
 }
-
 .feature-title {
   font-size: 28px;
   font-weight: 700;
@@ -3241,7 +3232,6 @@ h2.-title {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
   text-align: center;
 }
-
 .feature-description {
   font-size: 16px;
   line-height: 1.5;
@@ -3380,7 +3370,6 @@ h2.-title {
   margin-bottom: 30px;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
 }
-
 .content-item ul {
   list-style: none;
   padding: 0;
@@ -3679,7 +3668,7 @@ h2.-title {
 @media (max-width: 1024px) {
   .poster-animation-section {
     height: 40vh;  /* 从27vh增加到40vh */
-    min-height: 240px;  /* 从160px增加到240px */
+    min-height: 240px;  /* 从180px增加到240px */
   }
 
   .poster-content-container {
@@ -3881,7 +3870,6 @@ h2.-title {
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
-
 .footer-link {
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
@@ -3892,7 +3880,6 @@ h2.-title {
 .footer-link:hover {
   color: #e50914;
 }
-
 .divider {
   color: rgba(255, 255, 255, 0.3);
   font-size: 12px;
@@ -4238,7 +4225,7 @@ const EZMovieHome: React.FC = () => {
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    actors?: string[];
+    casts?: string[];
     categories?: Array<{ label: string; href?: string }>;
     tags?: string[];
     description?: string;
@@ -4246,6 +4233,7 @@ const EZMovieHome: React.FC = () => {
   } | null>(null);
 
   const openMovieModal = (movie: {
+    id?: string;
     title: string;
     poster: string;
     backdrop?: string;
@@ -4255,7 +4243,7 @@ const EZMovieHome: React.FC = () => {
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    actors?: string[];
+    casts?: string[];
     categories?: Array<{ label: string; href?: string }>;
     tags?: string[];
     description?: string;
@@ -4271,7 +4259,7 @@ const EZMovieHome: React.FC = () => {
       imdb: movie.imdb,
       ageRating: movie.ageRating,
       language: movie.language,
-      actors: movie.actors,
+      casts: movie.casts || [],
       categories: movie.categories,
       tags: movie.tags,
       description: movie.description,
@@ -4281,6 +4269,27 @@ const EZMovieHome: React.FC = () => {
     });
     setIsModalOpen(true);
     document.body.style.overflow = "hidden";
+
+    // If casts missing but we have id, fetch detail to enrich
+    if ((!movie.casts || movie.casts.length === 0) && movie.id) {
+      (async () => {
+        try {
+          const resp = await fetch(`${API_BASE}/movies/${movie.id}`);
+          if (!resp.ok) return;
+          const detail = await resp.json();
+          if (detail && Array.isArray(detail.cast) && detail.cast.length > 0) {
+            setSelectedMovie((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    casts: detail.cast.map((c: any) => c.name || c) || [],
+                  }
+                : prev
+            );
+          }
+        } catch (_) {}
+      })();
+    }
   };
 
   const closeMovieModal = () => {
@@ -4305,12 +4314,37 @@ const EZMovieHome: React.FC = () => {
         imdb: d.imdb,
         ageRating: d.ageRating,
         language: d.language,
-        actors: d.actors,
+        casts: d.casts || d.actors || [],
         categories: d.categories,
         tags: d.tags,
       });
       setIsModalOpen(true);
       document.body.style.overflow = "hidden";
+
+      // Enrich casts if missing using id from event
+      if ((!d.casts || d.casts.length === 0) && d.id) {
+        (async () => {
+          try {
+            const resp = await fetch(`${API_BASE}/movies/${d.id}`);
+            if (!resp.ok) return;
+            const detail = await resp.json();
+            if (
+              detail &&
+              Array.isArray(detail.cast) &&
+              detail.cast.length > 0
+            ) {
+              setSelectedMovie((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      casts: detail.cast.map((c: any) => c.name || c) || [],
+                    }
+                  : prev
+              );
+            }
+          } catch (_) {}
+        })();
+      }
     };
     window.addEventListener("ezm-open-modal", handler as any);
     return () => window.removeEventListener("ezm-open-modal", handler as any);
@@ -4451,7 +4485,6 @@ const EZMovieHome: React.FC = () => {
     </div>
   );
 };
-
 const SiteHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const navItems = [
     "หน้าหลัก",
@@ -4565,6 +4598,19 @@ const HeroSection = ({
   currentSlide: number;
   slides: Movie[];
 }) => {
+  const [isDesktop, setIsDesktop] = React.useState<boolean>(true);
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 769px)");
+    const onChange = () => setIsDesktop(mq.matches);
+    onChange();
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else mq.addListener(onChange as any);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", onChange);
+      else mq.removeListener(onChange as any);
+    };
+  }, []);
   return (
     <section className={styles.hero}>
       {(slides || []).map((slide, index) => (
@@ -4597,24 +4643,26 @@ const HeroSection = ({
                   })`,
                 }}
               />
-              <p
-                className={styles.heroDescription}
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical" as any,
-                  overflow: "hidden",
-                }}
-              >
-                {slide.description}
-              </p>
+              {isDesktop && (
+                <p
+                  className={styles.heroDescription}
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical" as any,
+                    overflow: "hidden",
+                  }}
+                >
+                  {slide.description}
+                </p>
+              )}
               <div className={styles.heroActions}>
                 <button className={`${styles.ctaButton} ${styles.ctaPrimary}`}>
                   <IconPlay className={styles.btnIcon} /> Watch Now
                 </button>
                 {/* <button className={`${styles.ctaButton} ${styles.ctaGhost}`}>
-                  <IconPlus className={styles.btnIcon} /> รายการของฉัน
-                </button> */}
+                   <IconPlus className={styles.btnIcon} /> รายการของฉัน
+                 </button> */}
               </div>
             </div>
           </div>
@@ -4629,7 +4677,7 @@ const SloganSection = () => {
     <section className={styles.sloganSection}>
       <div className={styles.sloganInner}>
         <h2 className={styles.sloganText}>
-          EZ Movie ดูหนังออนไลน์ฟรี หนังใหม่ 2025 ไม่มีโฆษณา ชัดที่สุด ไวที่สุด
+          iSoftHub 4D99 Movie 2025 Latest Hot Movie
         </h2>
       </div>
     </section>
@@ -4640,6 +4688,7 @@ const MovieSliderSection = ({
   onOpenMovie,
 }: {
   onOpenMovie?: (movie: {
+    id?: string;
     title: string;
     poster: string;
     backdrop?: string;
@@ -4649,7 +4698,7 @@ const MovieSliderSection = ({
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    actors?: string[];
+    casts?: string[];
     categories?: Array<{ label: string; href?: string }>;
     tags?: string[];
     description?: string;
@@ -4682,9 +4731,24 @@ const MovieSliderSection = ({
           duration: formatRuntime(m.runtime),
           quality: undefined,
           badgeText: undefined,
-          tags: m.tags ?? m.genres ?? [],
+          // Normalize tags/genres: server returns [{id,name}] – convert to names for display
+          tags: Array.isArray(m.tags)
+            ? m.tags
+                .map((t: any) => (typeof t === "string" ? t : t?.name))
+                .filter(Boolean)
+            : Array.isArray(m.genres)
+            ? m.genres
+                .map((g: any) => (typeof g === "string" ? g : g?.name))
+                .filter(Boolean)
+            : [],
           description: m.synopsis,
           ageRating: m.ageRating,
+          // Keep casts objects if provided so modal can deep-link via id
+          casts: Array.isArray(m.casts)
+            ? m.casts.map((c: any) =>
+                typeof c === "string" ? c : { id: c?.id, name: c?.name }
+              )
+            : [],
         }));
         if (isMounted) {
           setMovies(mapped);
@@ -4888,6 +4952,7 @@ const MainMovieCard = ({
   movie: Movie;
   isTransitioning: boolean;
   onOpenMovie?: (movie: {
+    id?: string;
     title: string;
     poster: string;
     backdrop?: string;
@@ -4897,7 +4962,7 @@ const MainMovieCard = ({
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    actors?: string[];
+    casts?: string[];
     categories?: Array<{ label: string; href?: string }>;
     tags?: string[];
     description?: string;
@@ -4927,6 +4992,7 @@ const MainMovieCard = ({
       className="x-card-movie x-card-movie--embed"
       onClick={() =>
         onOpenMovie?.({
+          id: displayMovie.id,
           title: displayMovie.title,
           poster: displayMovie.posterUrl,
           backdrop: displayMovie.posterUrl,
@@ -4934,6 +5000,7 @@ const MainMovieCard = ({
           year: displayMovie.year,
           runtime: displayMovie.duration,
           ageRating: displayMovie.ageRating,
+          casts: displayMovie.casts || [],
           tags: displayMovie.tags,
           description: displayMovie.description,
         })
@@ -5058,9 +5125,39 @@ const Top10WeeklyCarousel: React.FC<{
     [Autoplay({ delay: 3500, stopOnInteraction: false })]
   );
 
+  // Load TOP10 items from API
+  const API_BASE = `${
+    (import.meta as any).env?.VITE_API_BASE || "http://localhost:4000"
+  }/v1`;
+  const [top10, setTop10] = React.useState<
+    Array<{ id: string; title: string; poster: string }>
+  >([]);
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const resp = await fetch(
+          `${API_BASE}/movies?page=1&limit=24&tagName=TOP10`
+        );
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const items = Array.isArray(data?.items) ? data.items : [];
+        const mapped = items.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          poster: m.poster || m.backdrop || "",
+        }));
+        if (mounted) setTop10(mapped);
+      } catch (_) {}
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const pages = React.useMemo(
-    () => [top10Items.slice(0, 5), top10Items.slice(5, 10)],
-    []
+    () => [top10.slice(0, 5), top10.slice(5, 10)],
+    [top10]
   );
 
   const scrollPrev = React.useCallback(() => {
@@ -5079,7 +5176,7 @@ const Top10WeeklyCarousel: React.FC<{
       <div className="container">
         <div className="x-category-movie-title">
           <div className="-category-inner-container">
-            <h2 className="-title">Top 10 ประจำสัปดาห์</h2>
+            <h2 className="-title">Top 10 Movies</h2>
           </div>
         </div>
       </div>
@@ -5087,7 +5184,7 @@ const Top10WeeklyCarousel: React.FC<{
       {/* Mobile: horizontal scroll with desktop-style number overlay */}
       <div className="x-top10-mobileScroll">
         <div className="x-top10-mobileTrack">
-          {top10Items.map((m, idx) => (
+          {top10.map((m, idx) => (
             <div
               className="x-item-wrapper-movie x-top5-pair x-top10-m-pair"
               key={m.id}
@@ -5607,7 +5704,6 @@ const CatalogThaiSection: React.FC<{
     {CatalogCarouselBody(onOpenMovie)}
   </section>
 );
-
 // Helper to render the carousel body with same logic/data
 function CatalogCarouselBody(
   onOpenMovie?: (m: {
@@ -6032,7 +6128,7 @@ const MovieModal: React.FC<{
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    actors?: string[];
+    casts?: string[];
     categories?: Array<{ label: string; href?: string }>;
     tags?: string[];
     descriptionHtml?: string;
@@ -6040,6 +6136,7 @@ const MovieModal: React.FC<{
   } | null;
   onClose: () => void;
 }> = ({ open, movie, onClose }) => {
+  console.log("passed movie in movie modal", movie);
   if (!open || !movie) return null;
   return (
     <div className="x-modal x-movie-modal" role="dialog" aria-modal="true">
@@ -6210,15 +6307,32 @@ const MovieModal: React.FC<{
                         </div>
                       )}
 
-                      {/* Actors */}
-                      {movie.actors && movie.actors.length > 0 && (
+                      {/* Cast */}
+                      {movie.casts && movie.casts.length > 0 && (
                         <div className="-tags -box -actors">
                           <span className="-title">Cast:</span>
-                          {movie.actors.map((actor) => (
-                            <a key={actor} href="#" className="badge -badge">
-                              {actor}
-                            </a>
-                          ))}
+                          {movie.casts.map((nameOrObj: any) => {
+                            const name =
+                              typeof nameOrObj === "string"
+                                ? nameOrObj
+                                : nameOrObj.name;
+                            const id =
+                              typeof nameOrObj === "string"
+                                ? undefined
+                                : nameOrObj.id;
+                            const href = id
+                              ? `/cast/${encodeURIComponent(id)}`
+                              : `/cast/${encodeURIComponent(name)}`;
+                            return (
+                              <a
+                                key={name}
+                                href={href}
+                                className="badge -badge"
+                              >
+                                {name}
+                              </a>
+                            );
+                          })}
                         </div>
                       )}
 
@@ -6496,7 +6610,6 @@ const MovieModal: React.FC<{
           background: rgba(255,255,255,0.15);
           transform: translateY(-1px);
         }
-
         /* Categories */
         .-category {
           color: #6db4ff;

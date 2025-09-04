@@ -446,23 +446,31 @@ export class MovieService {
     delete (movieData as any).posterUrl;
     delete (movieData as any).logoUrl;
 
-    // Filter out invalid credits (personId must exist in database)
-    let validCredits = undefined;
+    // Build credits: support both `credits` payload and simple `cast` personId[]
+    let validCredits: Array<{ personId: string; role: string }> | undefined =
+      undefined;
+    const creditsInput: Array<{ personId: string; role: string }> = [];
     if (credits && credits.length > 0) {
-      const personIds = credits.map((c) => c.personId).filter(Boolean);
-      if (personIds.length > 0) {
-        const existingPeople = await this.prisma.person.findMany({
-          where: { id: { in: personIds } },
-          select: { id: true },
-        });
-        const validPersonIds = new Set(existingPeople.map((p) => p.id));
-        validCredits = credits.filter(
-          (credit) =>
-            credit.personId &&
-            credit.role &&
-            validPersonIds.has(credit.personId)
-        );
+      for (const c of credits) {
+        if (c.personId && c.role)
+          creditsInput.push({ personId: c.personId, role: c.role });
       }
+    }
+    if (createMovieDto.cast && createMovieDto.cast.length > 0) {
+      for (const pid of createMovieDto.cast) {
+        if (pid) creditsInput.push({ personId: pid, role: "cast" });
+      }
+    }
+    if (creditsInput.length > 0) {
+      const personIds = Array.from(
+        new Set(creditsInput.map((c) => c.personId))
+      );
+      const existingPeople = await this.prisma.person.findMany({
+        where: { id: { in: personIds } },
+        select: { id: true },
+      });
+      const validPersonIds = new Set(existingPeople.map((p) => p.id));
+      validCredits = creditsInput.filter((c) => validPersonIds.has(c.personId));
     }
 
     console.log("Prisma create data:", {
@@ -599,23 +607,31 @@ export class MovieService {
       throw new NotFoundException(`Movie with ID ${id} not found`);
     }
 
-    // Filter out invalid credits (personId must exist in database)
-    let validCredits = undefined;
+    // Build credits from payload and/or cast personId[]
+    let validCredits: Array<{ personId: string; role: string }> | undefined =
+      undefined;
+    const creditsInput: Array<{ personId: string; role: string }> = [];
     if (credits && credits.length > 0) {
-      const personIds = credits.map((c) => c.personId).filter(Boolean);
-      if (personIds.length > 0) {
-        const existingPeople = await this.prisma.person.findMany({
-          where: { id: { in: personIds } },
-          select: { id: true },
-        });
-        const validPersonIds = new Set(existingPeople.map((p) => p.id));
-        validCredits = credits.filter(
-          (credit) =>
-            credit.personId &&
-            credit.role &&
-            validPersonIds.has(credit.personId)
-        );
+      for (const c of credits) {
+        if (c.personId && c.role)
+          creditsInput.push({ personId: c.personId, role: c.role });
       }
+    }
+    if (updateMovieDto.cast && updateMovieDto.cast.length > 0) {
+      for (const pid of updateMovieDto.cast) {
+        if (pid) creditsInput.push({ personId: pid, role: "cast" });
+      }
+    }
+    if (creditsInput.length > 0) {
+      const personIds = Array.from(
+        new Set(creditsInput.map((c) => c.personId))
+      );
+      const existingPeople = await this.prisma.person.findMany({
+        where: { id: { in: personIds } },
+        select: { id: true },
+      });
+      const validPersonIds = new Set(existingPeople.map((p) => p.id));
+      validCredits = creditsInput.filter((c) => validPersonIds.has(c.personId));
     }
 
     console.log("Prisma update data:", {
