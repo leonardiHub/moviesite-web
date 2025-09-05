@@ -418,6 +418,74 @@ export class MovieService {
     return enhancedMovie;
   }
 
+  async findRelatedByGenres(movieId: string, limit: number = 12) {
+    // Fetch the movie to get its genres
+    const base = await this.prisma.movie.findUnique({
+      where: { id: movieId },
+      include: {
+        genres: true,
+      },
+    });
+
+    if (!base) {
+      throw new NotFoundException("Movie not found");
+    }
+
+    const genreIds = (base.genres || []).map((g) => g.genreId).filter(Boolean);
+    if (genreIds.length === 0) return [] as any[];
+
+    const items = await this.prisma.movie.findMany({
+      where: {
+        id: { not: movieId },
+        status: "published",
+        genres: {
+          some: { genreId: { in: genreIds } },
+        },
+      },
+      include: {
+        artworks: { where: { kind: { in: ["poster", "logo", "backdrop"] } } },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: limit,
+    });
+
+    return items.map((m: any) => {
+      const poster = (m.artworks || []).find((a: any) => a.kind === "poster");
+      const logo = (m.artworks || []).find((a: any) => a.kind === "logo");
+      const posterUrl = poster?.url?.startsWith("http")
+        ? poster.url
+        : poster?.url
+          ? this.configService.get(
+              "PUBLIC_BASE_URL",
+              "http://51.79.254.237:4000"
+            ) +
+            (poster.url.includes("/")
+              ? `/v1/images/${encodeURIComponent(poster.url)}`
+              : `/v1/images/poster/${encodeURIComponent(poster.url)}`)
+          : null;
+      const logoUrl = logo?.url?.startsWith("http")
+        ? logo.url
+        : logo?.url
+          ? this.configService.get(
+              "PUBLIC_BASE_URL",
+              "http://51.79.254.237:4000"
+            ) +
+            (logo.url.includes("/")
+              ? `/v1/images/${encodeURIComponent(logo.url)}`
+              : `/v1/images/logo/${encodeURIComponent(logo.url)}`)
+          : null;
+
+      return {
+        id: m.id,
+        title: m.title,
+        year: m.year,
+        rating: m.rating ?? null,
+        poster: posterUrl,
+        logo: logoUrl,
+      };
+    });
+  }
+
   // Create movie with enhanced data and poster handling
   async create(createMovieDto: CreateMovieDto) {
     console.log("MovieService.create - received data:", {

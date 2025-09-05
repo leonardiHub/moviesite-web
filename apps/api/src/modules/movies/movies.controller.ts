@@ -232,6 +232,7 @@ export class MoviesController {
         rating: { type: "number" },
         synopsis: { type: "string" },
         poster: { type: "string" },
+        videoUrl: { type: "string", nullable: true },
         backdrop: { type: "string" },
         genres: { type: "array", items: { type: "string" } },
         tags: { type: "array", items: { type: "string" } },
@@ -243,6 +244,7 @@ export class MoviesController {
   })
   async detail(@Param("id") id: string) {
     const m: any = await this.movieService.findOne(id);
+    const related = await this.movieService.findRelatedByGenres(id, 12);
     return {
       id: m.id,
       title: m.title,
@@ -253,10 +255,15 @@ export class MoviesController {
       synopsis: m.synopsis,
       poster: m.posterUrl || null,
       logo: m.logoUrl || null,
+      videoUrl: m.videoUrl || null,
       backdrop:
         (m.artworks || []).find((a: any) => a.kind === "backdrop")?.url || null,
-      genres: (m.genres || []).map((g: any) => g.genre?.name).filter(Boolean),
-      tags: (m.tags || []).map((t: any) => t.tag?.name).filter(Boolean),
+      genres: (m.genres || [])
+        .map((g: any) => ({ id: g.genre?.id, name: g.genre?.name }))
+        .filter((x: any) => x.id && x.name),
+      tags: (m.tags || [])
+        .map((t: any) => ({ id: t.tag?.id, name: t.tag?.name }))
+        .filter((x: any) => x.id && x.name),
       cast: (m.credits || [])
         .map((c: any) => ({
           id: c.person?.id,
@@ -264,7 +271,7 @@ export class MoviesController {
           role: c.role,
         }))
         .filter((x: any) => x.id && x.name),
-      related: [],
+      related,
     };
   }
 
@@ -280,39 +287,61 @@ export class MoviesController {
     const now = Date.now();
     const base = process.env.PUBLIC_BASE_URL || "http://51.79.254.237:4000";
 
+    // Prefer HLS master and also include MP4 fallback so the player can recover
+    let sources: Array<any> = [];
+    try {
+      const prismaModule = await import("../prisma/prisma.service");
+      const { PrismaService } = prismaModule as any;
+      const prisma = new PrismaService();
+
+      const movie = await prisma.movie.findUnique({
+        where: { id },
+        include: {
+          sources: { where: { isActive: true }, orderBy: { quality: "desc" } },
+        },
+      });
+
+      const hlsMasterKey = `hls/${id}/master.m3u8`;
+      sources.push({
+        id: "hls",
+        type: "hls",
+        label: "Auto",
+        url: `${base}/cdn/${hlsMasterKey}`,
+      });
+
+      // Fallback MP4 source
+      const mp4 = movie?.sources?.find(
+        (s: any) => (s.type || "").toLowerCase() === "mp4"
+      );
+      if (mp4?.url) {
+        const isHttp = mp4.url.startsWith("http");
+        const mp4Url = isHttp ? mp4.url : `${base}/cdn/${mp4.url}`;
+        sources.push({
+          id: "mp4",
+          type: "mp4",
+          label: mp4.quality || "1080p",
+          url: mp4Url,
+        });
+      }
+    } catch (_) {
+      // As a last resort, keep a placeholder demo so the player doesn't break completely
+      sources = [
+        {
+          id: "demo",
+          type: "hls",
+          label: "Demo",
+          url: `${base}/cdn/placeholder/demo.m3u8`,
+        },
+      ];
+    }
+
     return {
       movieId: id,
       ttl,
       expiresAt: new Date(now + ttl * 1000).toISOString(),
-      sources: [
-        {
-          id: "hls-1080",
-          type: "hls",
-          label: "1080p",
-          url: `${base}/cdn/placeholder/demo.m3u8`, // 仅 stub
-        },
-        {
-          id: "hls-720",
-          type: "hls",
-          label: "720p",
-          url: `${base}/cdn/placeholder/demo-720.m3u8`,
-        },
-      ],
-      subtitles: [
-        { lang: "th", label: "ไทย", url: `${base}/cdn/placeholder/th.vtt` },
-        { lang: "en", label: "English", url: `${base}/cdn/placeholder/en.vtt` },
-      ],
-      overlays: [
-        {
-          type: "image",
-          placement: "tr",
-          start: 10,
-          end: 30,
-          url: `${base}/cdn/sponsors/ez-casino.png`,
-          href: "https://example.com",
-          opacity: 0.9,
-        },
-      ],
+      sources,
+      subtitles: [],
+      overlays: [],
       analytics: { heartbeat: 30 },
     };
   }

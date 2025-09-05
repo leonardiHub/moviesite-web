@@ -16,10 +16,11 @@ type Movie = {
   duration?: string;
   quality?: string;
   badgeText?: string;
-  tags?: string[];
+  tags?: Array<string | { id?: string; name?: string }>;
+  genres?: Array<string | { id?: string; name?: string }>;
   description?: string;
   ageRating?: "13+" | "15+" | "16+" | "18+"; // 新增年龄分级
-  casts?: string[];
+  casts?: Array<string | { id?: string; name?: string }>;
 };
 
 // Asset urls
@@ -115,7 +116,7 @@ const movieSliderData: Movie[] = [
       "หนังวิทยาศาสตร์",
       "พากย์ไทย",
       "ซับไทย",
-      "หนังมาใหม่",
+      "Action",
       "หนังสยองขวัญ",
       "2025",
     ],
@@ -141,7 +142,7 @@ const movieSliderData: Movie[] = [
       "หนังวิทยาศาสตร์",
       "พากย์ไทย",
       "ซับไทย",
-      "หนังมาใหม่",
+      "Action",
       "ซุปเปอร์ฮีโร่ Superhero",
       "2025",
     ],
@@ -191,7 +192,7 @@ const movieSliderData: Movie[] = [
       "หนังอาชญากรรม",
       "พากย์ไทย",
       "ซับไทย",
-      "หนังมาใหม่",
+      "Action",
       "2025",
     ],
     description:
@@ -215,7 +216,7 @@ const movieSliderData: Movie[] = [
       "หนังอาชญากรรม",
       "พากย์ไทย",
       "ซับไทย",
-      "หนังมาใหม่",
+      "Action",
       "2025",
     ],
     description:
@@ -239,7 +240,7 @@ const movieSliderData: Movie[] = [
       "หนังครอบครัว",
       "พากย์ไทย",
       "ซับไทย",
-      "หนังมาใหม่",
+      "Action",
       "2025",
     ],
     description:
@@ -264,7 +265,7 @@ const movieSliderData: Movie[] = [
       "หนังวิทยาศาสตร์",
       "พากย์ไทย",
       "ซับไทย",
-      "หนังมาใหม่",
+      "Action",
       "2025",
     ],
     description: "การกลับมาของไดโนเสาร์ในภาคใหม่ที่น่าตื่นเต้นกว่าเดิม",
@@ -287,7 +288,7 @@ const movieSliderData: Movie[] = [
       "หนังแอนิเมชัน",
       "พากย์ไทย",
       "ซับไทย",
-      "หนังมาใหม่",
+      "Action",
       "2025",
     ],
     description: "การผจญภัยของเด็กหญิงฮาวายกับเอเลี่ยนตัวน้อยสุดซน",
@@ -1207,41 +1208,6 @@ img.img-fluid.-image,
   }
 }
 
-  /* Poster animation more compact */
-  .poster-animation-section { height: 22vh; min-height: 140px; }
-
-  /* 移动端紧凑的内容间距 */
-  .poster-content-overlay { padding: 8px 0; }
-  .poster-title { margin-bottom: 6px; }
-  .poster-subtitle { margin-bottom: 10px; }
-  .poster-btn-wrapper { margin-top: 8px; }
-
-/* 平板等中等屏幕也固定显示标题 */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .x-catalog-card .-overlay {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 桌面版显示Embla轮播，隐藏移动端滚动 */
-@media (min-width: 769px) {
-  .embla-cat{ display: block !important; }
-  .x-catalog-mobileScroll { display: none !important; }
-}
-
-/* 大屏幕桌面版恢复hover效果 */
-@media (min-width: 1025px) {
-  .x-catalog-card .-overlay {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  .x-catalog-card:hover .-overlay {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
   /* Optional: simplify lower info sections on small devices */
   .features-section, .new-content-section { display: none; }
 
@@ -1270,8 +1236,6 @@ img.img-fluid.-image,
     0 8px 24px rgba(0,0,0,.40),
     0 0 0 1px rgba(229, 9, 20, 0.3);       /* 保留红色边框效果 */
 }
-
-/* 旧的重复定义已清理 */
 
 /* 右侧小卡片也添加自然阴影 */
 .${styles.smallMovieCard} {
@@ -1631,7 +1595,6 @@ h2.-title {
   filter: drop-shadow(0 8px 16px rgba(229, 9, 20, 0.4));
   animation: luxuryBounce 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
-
 @keyframes luxuryBounce {
   0% { transform: translateY(0) scale(1); }
   40% { transform: translateY(-4px) scale(1.2); }
@@ -2428,7 +2391,6 @@ h2.-title {
   transform: translateY(8px);
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s;
 }
-
 .${styles.transitioning} .${styles.cardPlayBtn} {
   opacity: 0.5;
   transform: translateY(10px) scale(0.95);
@@ -3376,7 +3338,6 @@ h2.-title {
   padding: 0;
   margin: 0;
 }
-
 .content-item li {
   margin-bottom: 35px;
   padding: 0;
@@ -3877,7 +3838,6 @@ h2.-title {
   font-size: 14px;
   transition: color 0.3s ease;
 }
-
 .footer-link:hover {
   color: #e50914;
 }
@@ -3885,7 +3845,6 @@ h2.-title {
   color: rgba(255, 255, 255, 0.3);
   font-size: 12px;
 }
-
 .footer-copyright {
   color: rgba(255, 255, 255, 0.5);
   font-size: 13px;
@@ -4226,9 +4185,10 @@ const EZMovieHome: React.FC = () => {
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    casts?: string[];
+    casts?: Array<string | { id?: string; name?: string }>;
     categories?: Array<{ label: string; href?: string }>;
-    tags?: string[];
+    tags?: Array<string | { id?: string; name?: string }>;
+    genres?: Array<string | { id?: string; name?: string }>;
     description?: string;
     descriptionHtml?: string;
   } | null>(null);
@@ -4244,9 +4204,10 @@ const EZMovieHome: React.FC = () => {
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    casts?: string[];
+    casts?: Array<string | { id?: string; name?: string }>;
     categories?: Array<{ label: string; href?: string }>;
-    tags?: string[];
+    tags?: Array<string | { id?: string; name?: string }>;
+    genres?: Array<string | { id?: string; name?: string }>;
     description?: string;
     descriptionHtml?: string;
   }) => {
@@ -4263,6 +4224,7 @@ const EZMovieHome: React.FC = () => {
       casts: movie.casts || [],
       categories: movie.categories,
       tags: movie.tags,
+      genres: movie.genres,
       description: movie.description,
       descriptionHtml:
         movie.descriptionHtml ||
@@ -4318,6 +4280,7 @@ const EZMovieHome: React.FC = () => {
         casts: d.casts || d.actors || [],
         categories: d.categories,
         tags: d.tags,
+        genres: d.genres,
       });
       setIsModalOpen(true);
       document.body.style.overflow = "hidden";
@@ -4417,7 +4380,7 @@ const EZMovieHome: React.FC = () => {
         <section>
           <Catalog20Section onOpenMovie={openMovieModal} />
         </section>
-        <section>
+        {/* <section>
           <CatalogAnimeSection onOpenMovie={openMovieModal} />
         </section>
         <section>
@@ -4425,7 +4388,7 @@ const EZMovieHome: React.FC = () => {
         </section>
         <section>
           <CatalogThaiSection onOpenMovie={openMovieModal} />
-        </section>
+        </section> */}
       </>
       {/* Promo 1 */}
       <section className="promo-section">
@@ -4488,13 +4451,13 @@ const EZMovieHome: React.FC = () => {
 };
 const SiteHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const navItems = [
-    "หน้าหลัก",
-    "หนังใหม่",
-    "ซีรีส์",
-    "อนิเมะ",
-    "ประเภทหนัง",
-    "คลิปวิดีโอ",
-    "นักแสดง",
+    "Home",
+    "New Movies",
+    "Series",
+    "Anime",
+    "Genres",
+    "Clips",
+    "Cast",
   ];
 
   return (
@@ -4658,9 +4621,12 @@ const HeroSection = ({
                 </p>
               )}
               <div className={styles.heroActions}>
-                <button className={`${styles.ctaButton} ${styles.ctaPrimary}`}>
+                <a
+                  href={`/movie/${encodeURIComponent(slide.id)}`}
+                  className={`${styles.ctaButton} ${styles.ctaPrimary}`}
+                >
                   <IconPlay className={styles.btnIcon} /> Watch Now
-                </button>
+                </a>
                 {/* <button className={`${styles.ctaButton} ${styles.ctaGhost}`}>
                    <IconPlus className={styles.btnIcon} /> รายการของฉัน
                  </button> */}
@@ -4699,9 +4665,10 @@ const MovieSliderSection = ({
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    casts?: string[];
+    casts?: Array<string | { id?: string; name?: string }>;
     categories?: Array<{ label: string; href?: string }>;
-    tags?: string[];
+    tags?: Array<string | { id?: string; name?: string }>;
+    genres?: Array<string | { id?: string; name?: string }>;
     description?: string;
     descriptionHtml?: string;
   }) => void;
@@ -4732,28 +4699,37 @@ const MovieSliderSection = ({
           duration: formatRuntime(m.runtime),
           quality: undefined,
           badgeText: undefined,
-          // Normalize tags/genres: server returns [{id,name}] – convert to names for display
+          // Keep objects: {id,name}
           tags: Array.isArray(m.tags)
-            ? m.tags
-                .map((t: any) => (typeof t === "string" ? t : t?.name))
-                .filter(Boolean)
-            : Array.isArray(m.genres)
-            ? m.genres
-                .map((g: any) => (typeof g === "string" ? g : g?.name))
-                .filter(Boolean)
+            ? m.tags.map((t: any) =>
+                typeof t === "string"
+                  ? { name: t }
+                  : { id: t?.id, name: t?.name }
+              )
+            : [],
+          genres: Array.isArray(m.genres)
+            ? m.genres.map((g: any) =>
+                typeof g === "string"
+                  ? { name: g }
+                  : { id: g?.id, name: g?.name }
+              )
             : [],
           description: m.synopsis,
           ageRating: m.ageRating,
           // Keep casts objects if provided so modal can deep-link via id
           casts: Array.isArray(m.casts)
             ? m.casts.map((c: any) =>
-                typeof c === "string" ? c : { id: c?.id, name: c?.name }
+                typeof c === "string"
+                  ? { name: c }
+                  : { id: c?.id, name: c?.name }
               )
             : [],
         }));
         if (isMounted) {
           setMovies(mapped);
-          setCurrentMainMovie(0);
+          // Initialize to the last index so the first small card will be the next main
+          const initIndex = mapped.length > 0 ? mapped.length - 1 : 0;
+          setCurrentMainMovie(initIndex);
         }
       } catch (e) {
         // noop
@@ -4772,6 +4748,11 @@ const MovieSliderSection = ({
   const stepRef = React.useRef(0); // 每步位移像素 = 卡宽 + gap
   const timerRef = React.useRef<number | null>(null);
   const isPausedRef = React.useRef(false);
+  const touchStartXRef = React.useRef<number | null>(null);
+  const pointerDownXRef = React.useRef<number | null>(null);
+  const SWIPE_THRESHOLD = 30;
+  const isDraggingRef = React.useRef(false);
+  const dragBaseOffsetRef = React.useRef(0);
 
   // 右侧小卡数组：原始 + 克隆前 N 张（来自 API）
   const smallCards = React.useMemo(() => {
@@ -4800,14 +4781,25 @@ const MovieSliderSection = ({
     if (!movies.length) return;
 
     const computeStep = () => {
-      // 每次移动一张完整卡片的距离，让上一张完全消失
-      const cardW = 110; // 小卡片固定宽度（见移动端样式）
-      const gap = 10; // 轨道间距（见移动端样式）
-      stepRef.current = cardW + gap; // 每步120px，移动一张完整卡片+间距
+      // Move exactly one poster width per tick (ignore inter-card gap)
+      const firstEl = track.firstElementChild as HTMLElement | null;
+      const rect = firstEl?.getBoundingClientRect();
+      const cardW = rect?.width ? Math.round(rect.width) : 110;
+      stepRef.current = cardW;
       // 按新步长纠正当前位置
       track.style.transform = `translate3d(-${
         indexRef.current * stepRef.current
       }px,0,0)`;
+      try {
+        console.log(
+          "[Slider] computeStep",
+          { cardW, step: stepRef.current },
+          "index:",
+          indexRef.current,
+          "transform:",
+          track.style.transform
+        );
+      } catch (_) {}
     };
 
     computeStep();
@@ -4873,11 +4865,33 @@ const MovieSliderSection = ({
       // 写 transform（只合成层动作）
       const offset = indexRef.current * stepRef.current;
       track.style.transform = `translate3d(-${offset}px,0,0)`;
+      try {
+        console.log("[Slider] tick move", {
+          index: indexRef.current,
+          step: stepRef.current,
+          offset,
+        });
+      } catch (_) {}
 
-      // 大卡片稍后切，避开 transform 开始的那几帧峰值
+      // 大卡片稍后切：主卡应当是“刚刚移入左侧的大卡”（右侧列表上一帧的第一个）
       window.setTimeout(() => {
-        const newMainIndex = indexRef.current % movies.length;
-        setCurrentMainMovie(newMainIndex);
+        // After each tick we have advanced by 1 card: the new firstVisible is (indexRef % n)
+        // The main card we want is the PREVIOUS firstVisible (i.e., the item that just moved left)
+        const normalized = indexRef.current % movies.length; // new first item on the right
+        const prevFirstIndex = (normalized - 1 + movies.length) % movies.length;
+        const newMainIndex = prevFirstIndex;
+        try {
+          console.log("[Slider] choose main", {
+            index: indexRef.current,
+            normalized,
+            prevFirstIndex,
+            newMainIndex,
+            currentMainMovie,
+            visibleFirst: movies[newMainIndex]?.title,
+          });
+        } catch (_) {}
+        if (newMainIndex !== currentMainMovie)
+          setCurrentMainMovie(newMainIndex);
       }, 120);
 
       // 兜底回跳（有些环境不触发 transitionend）
@@ -4932,7 +4946,11 @@ const MovieSliderSection = ({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <div className="ezm-sliderTrack" ref={sliderRef}>
+            <div
+              className="ezm-sliderTrack"
+              ref={sliderRef}
+              style={{ marginLeft: 0 }}
+            >
               {smallCards.map((m, i) => (
                 <SmallCard key={`${m.id}-${i}`} movie={m} />
               ))}
@@ -4943,7 +4961,6 @@ const MovieSliderSection = ({
     </section>
   );
 };
-
 // 大卡片组件 - 带切换动画
 const MainMovieCard = ({
   movie,
@@ -4963,9 +4980,10 @@ const MainMovieCard = ({
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    casts?: string[];
+    casts?: Array<string | { id?: string; name?: string }>;
     categories?: Array<{ label: string; href?: string }>;
-    tags?: string[];
+    tags?: Array<string | { id?: string; name?: string }>;
+    genres?: Array<string | { id?: string; name?: string }>;
     description?: string;
     descriptionHtml?: string;
   }) => void;
@@ -5003,6 +5021,7 @@ const MainMovieCard = ({
           ageRating: displayMovie.ageRating,
           casts: displayMovie.casts || [],
           tags: displayMovie.tags,
+          genres: displayMovie.genres,
           description: displayMovie.description,
         })
       }
@@ -5094,11 +5113,18 @@ const MainMovieCard = ({
             )}
             {displayMovie.tags && displayMovie.tags.length > 0 && (
               <div className="-category">
-                {displayMovie.tags.slice(0, 10).map((t) => (
-                  <a key={t} href="#" className="btn -btn-category">
-                    {t}
-                  </a>
-                ))}
+                {displayMovie.tags.slice(0, 10).map((t: any) => {
+                  const name = typeof t === "string" ? t : t?.name;
+                  const id = typeof t === "string" ? undefined : t?.id;
+                  const href = id
+                    ? `/tag/${encodeURIComponent(id)}`
+                    : `/?tag=${encodeURIComponent(name)}`;
+                  return (
+                    <a key={name} href={href} className="btn -btn-category">
+                      {name}
+                    </a>
+                  );
+                })}
               </div>
             )}
             <div className="-play-favorite">
@@ -5113,12 +5139,20 @@ const MainMovieCard = ({
     </div>
   );
 };
+
 const Top10WeeklyCarousel: React.FC<{
   onOpenMovie?: (m: {
     title: string;
     poster: string;
     backdrop?: string;
     trailerUrl?: string;
+    year?: string | number;
+    runtime?: string;
+    ageRating?: string;
+    description?: string;
+    tags?: Array<string | { id?: string; name?: string }>;
+    genres?: Array<string | { id?: string; name?: string }>;
+    casts?: Array<string | { id?: string; name?: string }>;
   }) => void;
 }> = ({ onOpenMovie }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -5131,7 +5165,20 @@ const Top10WeeklyCarousel: React.FC<{
     (import.meta as any).env?.VITE_API_BASE || "http://localhost:4000"
   }/v1`;
   const [top10, setTop10] = React.useState<
-    Array<{ id: string; title: string; poster: string }>
+    Array<{
+      id: string;
+      title: string;
+      poster: string;
+      backdrop?: string;
+      trailerUrl?: string;
+      year?: string | number;
+      runtime?: string;
+      ageRating?: string;
+      description?: string;
+      tags?: Array<string | { id?: string; name?: string }>;
+      genres?: Array<string | { id?: string; name?: string }>;
+      casts?: Array<string | { id?: string; name?: string }>;
+    }>
   >([]);
   React.useEffect(() => {
     let mounted = true;
@@ -5147,6 +5194,36 @@ const Top10WeeklyCarousel: React.FC<{
           id: m.id,
           title: m.title,
           poster: m.poster || m.backdrop || "",
+          backdrop: m.backdrop || m.poster || "",
+          trailerUrl: m.trailerUrl || undefined,
+          year: m.year,
+          runtime:
+            typeof m.runtime === "number"
+              ? formatRuntime(m.runtime)
+              : undefined,
+          ageRating: m.ageRating,
+          description: m.synopsis,
+          tags: Array.isArray(m.tags)
+            ? m.tags.map((t: any) =>
+                typeof t === "string"
+                  ? { name: t }
+                  : { id: t?.id, name: t?.name }
+              )
+            : [],
+          genres: Array.isArray(m.genres)
+            ? m.genres.map((g: any) =>
+                typeof g === "string"
+                  ? { name: g }
+                  : { id: g?.id, name: g?.name }
+              )
+            : [],
+          casts: Array.isArray(m.casts)
+            ? m.casts.map((c: any) =>
+                typeof c === "string"
+                  ? { name: c }
+                  : { id: c?.id, name: c?.name }
+              )
+            : [],
         }));
         if (mounted) setTop10(mapped);
       } catch (_) {}
@@ -5174,21 +5251,20 @@ const Top10WeeklyCarousel: React.FC<{
 
   return (
     <section className="x-top5">
-      <div className="container">
-        <div className="x-category-movie-title">
-          <div className="-category-inner-container">
-            <h2 className="-title">Top 10 Movies</h2>
-          </div>
-        </div>
+      <div style={{ height: "60px" }}>
+        <h2 className="-title">Top 10 Movies</h2>
       </div>
-
       {/* Mobile: horizontal scroll with desktop-style number overlay */}
       <div className="x-top10-mobileScroll">
-        <div className="x-top10-mobileTrack">
+        <div
+          className="x-top10-mobileTrack"
+          style={{ padding: "0 20px", display: "flex", gap: 14 }}
+        >
           {top10.map((m, idx) => (
             <div
               className="x-item-wrapper-movie x-top5-pair x-top10-m-pair"
               key={m.id}
+              style={{ flex: "0 0 auto" }}
             >
               {idx + 1 === 10 ? (
                 <div className="-number is-10" aria-hidden="true">
@@ -5203,7 +5279,19 @@ const Top10WeeklyCarousel: React.FC<{
               <div
                 className="x-item-movie"
                 onClick={() =>
-                  onOpenMovie?.({ title: m.title, poster: m.poster })
+                  onOpenMovie?.({
+                    title: m.title,
+                    poster: m.poster,
+                    backdrop: m.backdrop,
+                    trailerUrl: m.trailerUrl,
+                    year: m.year,
+                    runtime: m.runtime,
+                    ageRating: m.ageRating,
+                    casts: m.casts,
+                    tags: m.tags,
+                    genres: m.genres,
+                    description: m.description,
+                  })
                 }
               >
                 <img
@@ -5255,8 +5343,15 @@ const Top10WeeklyCarousel: React.FC<{
                             onOpenMovie?.({
                               title: m.title,
                               poster: m.poster,
-                              trailerUrl:
-                                "https://www.youtube.com/embed/oKiYuIsPxYk?autoplay=1",
+                              backdrop: m.backdrop,
+                              trailerUrl: m.trailerUrl,
+                              year: m.year,
+                              runtime: m.runtime,
+                              ageRating: m.ageRating,
+                              casts: m.casts,
+                              tags: m.tags,
+                              genres: m.genres,
+                              description: m.description,
                             })
                           }
                         >
@@ -5325,7 +5420,6 @@ const Top10WeeklyCarousel: React.FC<{
     </section>
   );
 };
-
 // Catalog carousel — 6 per view, 4 pages (24 items)
 const Catalog20Section: React.FC<{
   onOpenMovie?: (m: {
@@ -5346,6 +5440,33 @@ const Catalog20Section: React.FC<{
     []
   );
 
+  // Load movies by genre ACT from API
+  const [itemsACT, setItemsACT] = React.useState<
+    Array<{ id: string; title: string; poster: string }>
+  >([]);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const API_BASE = `${
+          (import.meta as any).env?.VITE_API_BASE || "http://localhost:4000"
+        }/v1`;
+        const res = await fetch(
+          `${API_BASE}/movies?page=1&limit=24&genreName=ACT`
+        );
+        if (!res.ok) return;
+        const json = await res.json();
+        const list = Array.isArray(json?.items) ? json.items : [];
+        setItemsACT(
+          list.map((m: any) => ({
+            id: m.id,
+            title: m.title,
+            poster: m.poster || m.backdrop || "",
+          }))
+        );
+      } catch (_) {}
+    })();
+  }, []);
+
   const scrollPrev = React.useCallback(() => {
     if (emblaApi) {
       emblaApi.scrollTo(emblaApi.selectedScrollSnap() - 1);
@@ -5360,11 +5481,11 @@ const Catalog20Section: React.FC<{
 
   // Preload
   React.useEffect(() => {
-    catalog24.forEach((m) => {
+    (itemsACT.length ? itemsACT : catalog24).forEach((m) => {
       const im = new Image();
       im.src = m.poster;
     });
-  }, []);
+  }, [itemsACT]);
 
   // Toggle left padding: at start use container padding; once scrolled, go full-width
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -5382,7 +5503,7 @@ const Catalog20Section: React.FC<{
         <div className="x-category-movie-title">
           <div className="-category-inner-container">
             <div className="title-with-button">
-              <h2 className="-title">หนังมาใหม่</h2>
+              <h2 className="-title">Action</h2>
               <div className="-see-all-wrapper">
                 <a
                   href="/หนังฝรั่ง"
@@ -5390,7 +5511,7 @@ const Catalog20Section: React.FC<{
                   data-animatable="fadeInRightShortly"
                   data-delay="300"
                 >
-                  ดูทั้งหมด
+                  View more
                 </a>
               </div>
             </div>
@@ -5401,31 +5522,33 @@ const Catalog20Section: React.FC<{
       {/* Mobile: horizontal scroll with larger cards */}
       <div className="x-catalog-mobileScroll">
         <div className="x-catalog-mobileTrack">
-          {catalog24.slice(0, 12).map((m) => (
-            <div
-              className="x-catalog-mobileCard"
-              key={`mobile-${m.id}`}
-              onClick={() =>
-                onOpenMovie?.({
-                  title: m.title,
-                  poster: m.poster,
-                  trailerUrl:
-                    "https://www.youtube.com/embed/oKiYuIsPxYk?autoplay=1",
-                })
-              }
-            >
-              <img
-                className="img-fluid -cover-img"
-                src={m.poster}
-                alt={m.title}
-                loading="lazy"
-                decoding="async"
-              />
-              <div className="-overlay" aria-hidden="true">
-                <h2 className="-title">{m.title}</h2>
+          {(itemsACT.length ? itemsACT : catalog24)
+            .slice(0, 12)
+            .map((m: any) => (
+              <div
+                className="x-catalog-mobileCard"
+                key={`mobile-${m.id}`}
+                onClick={() =>
+                  onOpenMovie?.({
+                    title: m.title,
+                    poster: m.poster,
+                    trailerUrl:
+                      "https://www.youtube.com/embed/oKiYuIsPxYk?autoplay=1",
+                  })
+                }
+              >
+                <img
+                  className="img-fluid -cover-img"
+                  src={m.poster}
+                  alt={m.title}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="-overlay" aria-hidden="true">
+                  <h2 className="-title">{m.title}</h2>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
@@ -5434,7 +5557,7 @@ const Catalog20Section: React.FC<{
         ref={emblaRef}
       >
         <div className="embla-cat__container">
-          {catalog24.map((m) => (
+          {(itemsACT.length ? itemsACT : catalog24).map((m: any) => (
             <div className="embla-cat__slide" key={m.id}>
               <div
                 className="x-catalog-card"
@@ -5533,7 +5656,7 @@ const CatalogAnimeSection: React.FC<{
                 data-animatable="fadeInRightShortly"
                 data-delay="300"
               >
-                ดูทั้งหมด
+                View more
               </a>
             </div>
           </div>
@@ -5599,7 +5722,7 @@ const CatalogSeriesSection: React.FC<{
                 data-animatable="fadeInRightShortly"
                 data-delay="300"
               >
-                ดูทั้งหมด
+                View more
               </a>
             </div>
           </div>
@@ -5663,7 +5786,7 @@ const CatalogThaiSection: React.FC<{
                 data-animatable="fadeInRightShortly"
                 data-delay="300"
               >
-                ดูทั้งหมด
+                View more
               </a>
             </div>
           </div>
@@ -5712,6 +5835,13 @@ function CatalogCarouselBody(
     poster: string;
     backdrop?: string;
     trailerUrl?: string;
+    year?: string | number;
+    runtime?: string;
+    ageRating?: string;
+    description?: string;
+    tags?: Array<string | { id?: string; name?: string }>;
+    genres?: Array<string | { id?: string; name?: string }>;
+    casts?: Array<string | { id?: string; name?: string }>;
   }) => void
 ) {
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -5750,7 +5880,7 @@ function CatalogCarouselBody(
       ref={emblaRef}
     >
       <div className="embla-cat__container">
-        {catalog24.map((m) => (
+        {catalog24.map((m: any) => (
           <div className="embla-cat__slide" key={`dup-${m.id}`}>
             <div
               className="x-catalog-card"
@@ -5758,8 +5888,15 @@ function CatalogCarouselBody(
                 onOpenMovie?.({
                   title: m.title,
                   poster: m.poster,
-                  trailerUrl:
-                    "https://www.youtube.com/embed/oKiYuIsPxYk?autoplay=1",
+                  backdrop: m.backdrop,
+                  trailerUrl: m.trailerUrl,
+                  year: m.year,
+                  runtime: m.runtime,
+                  ageRating: m.ageRating,
+                  casts: m.casts,
+                  tags: m.tags,
+                  genres: m.genres,
+                  description: m.description,
                 })
               }
             >
@@ -5856,7 +5993,7 @@ const FeaturesSection = () => {
       id: 4,
       title: "พร้อมดูแลคุณ 24 ชม.",
       description:
-        "ดูหนังออนไลน์ฟรี 24 ชม. พร้อมระบบแจ้งปัญหาการใช้งาน และสานตอบโต้งใหม่หาง ได้ พร้อมแล้วที่ เพื่อให้คุณไปพอดีอกการดูมีดองสลำไปประญิบรังมลูงศดันใน MDB หรือ Rotten tomatoes เป็นไอบัณดูตอุพชันภาพราระบบนำเข้าบมไอเอโฮ์แล้ม ใหอื่นมิอัน46 และลีจำเหปพ์ายจังหรัดาิดิมารี วัดตกหนังรอศดำจัดเคร่ราที่ คยยีนันระวอผู้ที Ezmovie ทีได้ว",
+        "ดูหนังออนไลน์ฟรี 24 ชั่วโมงผ่านแขคพอร์ม ไม่ว่าจะบน iOS, Android Windows Mac Os และระบบปฏิบัติการอื่นๆ ที่รองรับการใช้งาน Browser แน่ะกๆทำ TV ของคุณก็สามารถรับชมรีดาที่ดีดีเดียอู่สงนับคุมราคิดจายง่าย",
       image:
         "https://ezmovie.me/media/cache/strip/202411/block/a05a2d59f8d22714debac4753c632ced.png",
     },
@@ -5952,7 +6089,6 @@ const NewContentSection = () => {
     </section>
   );
 };
-
 // Poster Animation Section Component
 const PosterAnimationSection = () => {
   // 16张海报数据，重新分布到4列，每列包含更多照片以实现真正的滚动
@@ -6033,7 +6169,6 @@ const PosterAnimationSection = () => {
     </section>
   );
 };
-
 // Footer Component
 const SiteFooter = () => {
   const footerCategories = [
@@ -6129,9 +6264,10 @@ const MovieModal: React.FC<{
     imdb?: string | number;
     ageRating?: string;
     language?: string;
-    casts?: string[];
+    casts?: Array<string | { id?: string; name?: string }>;
     categories?: Array<{ label: string; href?: string }>;
-    tags?: string[];
+    tags?: Array<string | { id?: string; name?: string }>;
+    genres?: Array<string | { id?: string; name?: string }>;
     descriptionHtml?: string;
     bannerImages?: Array<{ src: string; href?: string; alt?: string }>;
   } | null;
@@ -6356,11 +6492,49 @@ const MovieModal: React.FC<{
                       {movie.tags && movie.tags.length > 0 && (
                         <div className="-tags -box mb-2">
                           <span className="-title">Tags:</span>
-                          {movie.tags.map((tag) => (
-                            <a key={tag} href="#" className="badge -badge">
-                              {tag}
-                            </a>
-                          ))}
+                          {movie.tags.map((tag: any) => {
+                            const name =
+                              typeof tag === "string" ? tag : tag?.name;
+                            const id =
+                              typeof tag === "string" ? undefined : tag?.id;
+                            const href = id
+                              ? `/tag/${encodeURIComponent(id)}`
+                              : `/?tag=${encodeURIComponent(name || "")}`;
+                            return (
+                              <a
+                                key={id || name}
+                                href={href}
+                                className="badge -badge"
+                              >
+                                {name}
+                              </a>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Genres */}
+                      {movie.genres && movie.genres.length > 0 && (
+                        <div className="-tags -box mb-2">
+                          <span className="-title">Genres:</span>
+                          {movie.genres.map((genre: any) => {
+                            const name =
+                              typeof genre === "string" ? genre : genre?.name;
+                            const id =
+                              typeof genre === "string" ? undefined : genre?.id;
+                            const href = id
+                              ? `/genre/${encodeURIComponent(id)}`
+                              : `/?genre=${encodeURIComponent(name || "")}`;
+                            return (
+                              <a
+                                key={id || name}
+                                href={href}
+                                className="badge -badge"
+                              >
+                                {name}
+                              </a>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

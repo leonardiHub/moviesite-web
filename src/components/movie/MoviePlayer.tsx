@@ -1,15 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import SponsorMenu from '../home/menu';
-import PlayerShell from '../../player/PlayerShell';
-import { useMoviePlay } from '../../hooks/useMovies';
-import { Track } from '../../lib/track';
-import Loading from '../common/Loading';
-import { ErrorFallback } from '../common/ErrorBoundary';
+import React, { useState, useEffect, useRef } from "react";
+import Hls from "hls.js";
+import { useParams, useNavigate } from "react-router-dom";
+import SponsorMenu from "../home/menu";
+import PlayerShell from "../../player/PlayerShell";
+import { useMoviePlay } from "../../hooks/useMovies";
+import { Track } from "../../lib/track";
+import Loading from "../common/Loading";
+import { ErrorFallback } from "../common/ErrorBoundary";
+import SiteFooter from "../common/Footer";
+import { SiteHeader } from "../common/Header";
 
 // Icon components
 const IconSearch: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+  >
     <circle cx="11" cy="11" r="8"></circle>
     <path d="M21 21L16.65 16.65"></path>
   </svg>
@@ -17,110 +25,311 @@ const IconSearch: React.FC<{ className?: string }> = ({ className }) => (
 
 // Mock movie data - replace with API call
 const mockMovieData = {
-  id: '1',
-  title: 'Avengers: Endgame',
-  originalTitle: 'Avengers: Endgame',
-  year: '2019',
-  duration: '181 นาที',
-  genre: ['Action', 'Adventure', 'Drama'],
-  rating: '8.4',
-  description: 'หลังจากเหตุการณ์ทำลายล้างใน Avengers: Infinity War นักรบที่เหลืออยู่พยายามหาทางย้อนเวลาเพื่อกลับมาพิทักษ์จักรวาลและเพื่อนของพวกเขา',
-  poster: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg',
-  backdrop: 'https://image.tmdb.org/t/p/w1920/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg',
-  trailerUrl: 'https://www.youtube.com/embed/TcMBFSGVi1c',
+  id: "1",
+  title: "Avengers: Endgame",
+  originalTitle: "Avengers: Endgame",
+  year: "2019",
+  duration: "181 นาที",
+  genre: ["Action", "Adventure", "Drama"],
+  rating: "8.4",
+  description:
+    "หลังจากเหตุการณ์ทำลายล้างใน Avengers: Infinity War นักรบที่เหลืออยู่พยายามหาทางย้อนเวลาเพื่อกลับมาพิทักษ์จักรวาลและเพื่อนของพวกเขา",
+  poster: "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+  backdrop: "https://image.tmdb.org/t/p/w1920/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg",
+  trailerUrl: "https://www.youtube.com/embed/TcMBFSGVi1c",
+  videoUrl: "",
   cast: [
-    { name: 'Robert Downey Jr.', character: 'Tony Stark / Iron Man' },
-    { name: 'Chris Evans', character: 'Steve Rogers / Captain America' },
-    { name: 'Mark Ruffalo', character: 'Bruce Banner / Hulk' },
-    { name: 'Chris Hemsworth', character: 'Thor' }
+    { name: "Robert Downey Jr.", character: "Tony Stark / Iron Man" },
+    { name: "Chris Evans", character: "Steve Rogers / Captain America" },
+    { name: "Mark Ruffalo", character: "Bruce Banner / Hulk" },
+    { name: "Chris Hemsworth", character: "Thor" },
   ],
-  director: 'Anthony Russo, Joe Russo',
-  studio: 'Marvel Studios'
+  director: "Anthony Russo, Joe Russo",
+  studio: "Marvel Studios",
 };
 
 const relatedMovies = [
   {
-    id: '2',
-    title: 'Avengers: Infinity War',
-    poster: 'https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg',
-    year: '2018',
-    rating: '8.4'
+    id: "2",
+    title: "Avengers: Infinity War",
+    poster: "https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+    year: "2018",
+    rating: "8.4",
   },
   {
-    id: '3',
-    title: 'Captain America: Civil War',
-    poster: 'https://image.tmdb.org/t/p/w500/rAGiXaUfPzY7CDEyNKUofk3Kw2e.jpg',
-    year: '2016',
-    rating: '7.8'
+    id: "3",
+    title: "Captain America: Civil War",
+    poster: "https://image.tmdb.org/t/p/w500/rAGiXaUfPzY7CDEyNKUofk3Kw2e.jpg",
+    year: "2016",
+    rating: "7.8",
   },
   {
-    id: '4',
-    title: 'Thor: Ragnarok',
-    poster: 'https://image.tmdb.org/t/p/w500/rzRwTcFvttcN1ZpX2xv4j3tSdJu.jpg',
-    year: '2017',
-    rating: '7.9'
+    id: "4",
+    title: "Thor: Ragnarok",
+    poster: "https://image.tmdb.org/t/p/w500/rzRwTcFvttcN1ZpX2xv4j3tSdJu.jpg",
+    year: "2017",
+    rating: "7.9",
   },
   {
-    id: '5',
-    title: 'Spider-Man: No Way Home',
-    poster: 'https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg',
-    year: '2021',
-    rating: '8.2'
+    id: "5",
+    title: "Spider-Man: No Way Home",
+    poster: "https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
+    year: "2021",
+    rating: "8.2",
   },
   {
-    id: '6',
-    title: 'Doctor Strange',
-    poster: 'https://image.tmdb.org/t/p/w500/uGBVj3bEbCoZbDjjl9wTxcygko1.jpg',
-    year: '2016',
-    rating: '7.5'
+    id: "6",
+    title: "Doctor Strange",
+    poster: "https://image.tmdb.org/t/p/w500/uGBVj3bEbCoZbDjjl9wTxcygko1.jpg",
+    year: "2016",
+    rating: "7.5",
   },
   {
-    id: '7',
-    title: 'Black Panther',
-    poster: 'https://image.tmdb.org/t/p/w500/uxzzxijgPIY7slzFvMotPv8wjKA.jpg',
-    year: '2018',
-    rating: '7.3'
-  }
+    id: "7",
+    title: "Black Panther",
+    poster: "https://image.tmdb.org/t/p/w500/uxzzxijgPIY7slzFvMotPv8wjKA.jpg",
+    year: "2018",
+    rating: "7.3",
+  },
 ];
 
 const MoviePlayer: React.FC = () => {
   const { movieId } = useParams<{ movieId: string }>();
   const navigate = useNavigate();
-  const [movie] = useState(mockMovieData);
+  const [movie, setMovie] = useState(mockMovieData);
+  const [related, setRelated] = useState<
+    Array<{ id: string; title: string; poster?: string; logo?: string }>
+  >([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [tags, setTags] = useState<Array<{ id: string; name: string }>>([]);
+  const [castList, setCastList] = useState<
+    Array<{ id: string; name: string; role?: string }>
+  >([]);
   // 移除复杂的播放器切换逻辑 - 直接使用新PlayerShell
   const lastPosRef = useRef(0);
   const hbRef = useRef<any>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Fetch movie detail first (public endpoint)
+  useEffect(() => {
+    const id = movieId || "cmf4x45n40000t4qd1oo2vhp4";
+    const url = `http://localhost:4000/v1/movies/${encodeURIComponent(id)}`;
+    (async () => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        // Map API shape to local UI model quickly
+        const mapped = {
+          id: data.id || id,
+          title: data.title || mockMovieData.title,
+          originalTitle: data.originalTitle || data.title,
+          year: String(data.year ?? ""),
+          duration:
+            typeof data.runtime === "number"
+              ? `${Math.floor(data.runtime / 60)} ชม. ${data.runtime % 60} นาที`
+              : mockMovieData.duration,
+          genre: Array.isArray(data.genres)
+            ? data.genres
+                .map((g: any) => (g?.name ? g.name : g))
+                .filter(Boolean)
+            : [],
+          rating: (data.rating ?? "").toString(),
+          description: data.synopsis || "",
+          poster: data.poster || mockMovieData.poster,
+          backdrop: data.backdrop || data.poster || mockMovieData.backdrop,
+          trailerUrl: data.trailerUrl || mockMovieData.trailerUrl,
+          videoUrl: data.videoUrl || "",
+          cast: Array.isArray(data.cast)
+            ? data.cast.map((c: any) => ({
+                name: c?.name || "",
+                character: c?.role || "",
+              }))
+            : [],
+          director: data.director || "",
+          studio: data.studio || "",
+        } as typeof mockMovieData;
+        setMovie(mapped);
+        // Tags for clickable chips
+        try {
+          const t = Array.isArray(data.tags)
+            ? data.tags
+                .map((t: any) => ({ id: t?.id || "", name: t?.name || t }))
+                .filter((t: any) => t.id && t.name)
+            : [];
+          setTags(t);
+        } catch (_) {
+          setTags([]);
+        }
+        // Cast with ids for navigation
+        try {
+          const cl = Array.isArray(data.cast)
+            ? data.cast
+                .map((c: any) => ({
+                  id: c?.id || "",
+                  name: c?.name || "",
+                  role: c?.role,
+                }))
+                .filter((c: any) => c.id && c.name)
+            : [];
+          setCastList(cl);
+        } catch (_) {
+          setCastList([]);
+        }
+        // Capture related movies from API if present
+        try {
+          const rel = Array.isArray(data.related)
+            ? data.related
+                .map((r: any) => ({
+                  id: r?.id || "",
+                  title: r?.title || "",
+                  poster: r?.poster || "",
+                  logo: r?.logo || "",
+                }))
+                .filter((r: any) => r.id && r.title)
+            : [];
+          setRelated(rel);
+        } catch (_) {
+          setRelated([]);
+        }
+      } catch (_) {
+        // keep mock on failure
+      }
+    })();
+  }, [movieId]);
 
   // 获取播放数据 - 直接获取，无需等待用户点击
-  const { data: playData, isLoading: isPlayLoading, error: playError } = useMoviePlay(
-    movieId || 'm1' // 使用URL参数或默认ID
+  const {
+    data: playData,
+    isLoading: isPlayLoading,
+    error: playError,
+  } = useMoviePlay(
+    movieId || "m1" // 使用URL参数或默认ID
   );
-
 
   // 播放器心跳埋点 - 简化后的逻辑
   useEffect(() => {
     if (!playData || !movieId) return;
-    
+
     // 页面加载时发送play_start事件
     Track.playStart(movieId);
-    
+
     const hb = Math.max(10, playData.analytics?.heartbeat || 30);
     hbRef.current = setInterval(() => {
       Track.playHeartbeat(movieId, lastPosRef.current);
     }, hb * 1000);
-    
+
     return () => {
       if (hbRef.current) clearInterval(hbRef.current);
       Track.playHeartbeat(movieId, lastPosRef.current);
-      Track.playEnd(movieId, 'page_leave');
+      Track.playEnd(movieId, "page_leave");
     };
   }, [playData?.analytics?.heartbeat, movieId]);
+
+  // Initialize HLS playback using blob URL to avoid exposing source in DOM
+  useEffect(() => {
+    if (!playData) return;
+
+    const sources = Array.isArray(playData.sources) ? playData.sources : [];
+    const hlsSource = sources.find(
+      (s: any) => s.type === "hls" || (s.url || "").includes(".m3u8")
+    );
+
+    const videoEl = videoRef.current;
+    if (!videoEl || !hlsSource) return;
+
+    const apiBase = "http://localhost:4000";
+    const buildProxyUrl = (raw: string | undefined) => {
+      if (!raw) return "";
+      if (raw.includes("/v1/videos/")) return raw;
+      // Accept either full S3 URL or S3 key
+      let key = raw;
+      const idx = raw.indexOf("amazonaws.com/");
+      if (idx !== -1) {
+        key = raw.substring(idx + "amazonaws.com/".length);
+      } else if (raw.startsWith("/cdn/")) {
+        key = raw.replace("/cdn/", "");
+      }
+      return `${apiBase}/v1/videos/${key}`;
+    };
+
+    let hls: Hls | null = null;
+
+    if (Hls.isSupported()) {
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90,
+        maxBufferLength: 30,
+        capLevelToPlayerSize: true,
+        autoStartLoad: true,
+        startPosition: -1,
+      });
+      hls.loadSource(hlsSource.url);
+      hls.attachMedia(videoEl);
+
+      const onManifestParsed = () => {
+        // Autoplay attempt (muted to allow autoplay policies)
+        try {
+          videoEl.muted = true;
+          videoEl.play().catch(() => {});
+        } catch (_) {}
+      };
+      hls.on(Hls.Events.MANIFEST_PARSED, onManifestParsed);
+
+      // Robust error handling and recovery
+      hls.on(Hls.Events.ERROR, function (_event, data) {
+        if (!hls) return;
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              try {
+                hls.destroy();
+              } catch (_) {}
+              // Fallback to MP4 via backend proxy if available
+              const mp4Url =
+                (playData.sources || []).find(
+                  (s: any) => (s.type || "").toLowerCase() === "mp4"
+                )?.url || movie.videoUrl;
+              const proxied = buildProxyUrl(mp4Url);
+              if (proxied) {
+                videoEl.src = proxied;
+                try {
+                  videoEl.play().catch(() => {});
+                } catch (_) {}
+              }
+              break;
+          }
+        }
+      });
+    } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
+      // iOS Safari
+      videoEl.src = hlsSource.url;
+      try {
+        videoEl.muted = true;
+        videoEl.play().catch(() => {});
+      } catch (_) {}
+    }
+
+    return () => {
+      if (hls) {
+        try {
+          hls.destroy();
+        } catch (_) {}
+      }
+    };
+  }, [playData?.sources]);
 
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-    
+
     // Set page title
     if (movie) {
       document.title = `${movie.title} - EZ Movie`;
@@ -129,14 +338,16 @@ const MoviePlayer: React.FC = () => {
 
   if (!movie) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#0a0c12'
-      }}>
-        <div style={{ color: '#fff', fontSize: '18px' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          background: "#0a0c12",
+        }}
+      >
+        <div style={{ color: "#fff", fontSize: "18px" }}>
           ไม่พบหนังที่ท่านต้องการ
         </div>
       </div>
@@ -694,6 +905,18 @@ const MoviePlayer: React.FC = () => {
           border: none;
         }
 
+        /* Desktop: make player full width and 40vh height */
+        @media (min-width: 992px) {
+          .movie-player {
+            height: 60vh !important;
+            padding-bottom: 0 !important;
+          }
+          .movie-player video,
+          .movie-player .player-container {
+            height: 100% !important;
+          }
+        }
+
         /* 播放器相关样式 */
         .trailer-container {
           position: relative;
@@ -1027,6 +1250,25 @@ const MoviePlayer: React.FC = () => {
           transform: scale(1.1);
         }
 
+        /* Desktop: 3 logos, each 1/3 of the row (max 900px wide) */
+        @media (min-width: 992px) {
+          .sponsor-grid {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+            gap: 0;
+          }
+          .sponsor-logo {
+            width: 33.333%;
+            max-width: 33.333%;
+            height: 200px; /* fixed row height so images can fill */
+            object-fit: cover; /* fill the box */
+            display: block;
+          }
+        }
+
         /* Movie Info Section - 新增样式 */
         .movie-info-section {
           padding: 32px 0;
@@ -1251,9 +1493,17 @@ const MoviePlayer: React.FC = () => {
           }
 
           .related-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 4px;
           }
+
+          .related-grid::-webkit-scrollbar { display: none; }
+
+          .related-card { flex: 0 0 58vw; scroll-snap-align: start; }
 
           /* 手机版直接显示overlay和标题，不需要hover */
           .related-overlay {
@@ -1308,8 +1558,8 @@ const MoviePlayer: React.FC = () => {
       `}</style>
 
       {/* Header - 使用网站统一Header */}
-      <SiteHeader onMenuClick={() => setIsMenuOpen(true)} />
 
+      <SiteHeader />
       <SponsorMenu open={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
       <main className="movie-content">
@@ -1350,62 +1600,111 @@ const MoviePlayer: React.FC = () => {
               display: none !important;
             }
           `}</style>
-          
+
           {isPlayLoading && (
-            <div style={{height: '56.25vw', maxHeight: 520, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <div
+              style={{
+                height: "56.25vw",
+                maxHeight: 520,
+                background: "#000",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               <Loading size="large" message="กำลังเตรียมเล่น..." />
             </div>
           )}
           {playError && (
-            <div style={{height: '56.25vw', maxHeight: 520, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-              <ErrorFallback 
+            <div
+              style={{
+                height: "56.25vw",
+                maxHeight: 520,
+                background: "#000",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ErrorFallback
                 message="ไม่สามารถเล่นได้ กรุณาลองใหม่อีกครั้ง"
                 onRetry={() => window.location.reload()}
               />
             </div>
           )}
-          {playData && (
-            <PlayerShell
-              data={playData}
-              onProgress={(sec) => { lastPosRef.current = sec; }}
-              fullBleed={true}                  // ✅ 铺满 100vw
-              accent="#21d0c6"                  // ✅ 青绿主色  
-              showTopBar={false}                // ✅ 顶栏隐藏（无"← ตัวอย่าง"等）
-              showBack={false}                  // ✅ 无返回按钮
-              showMenu={false}                  // ✅ 无菜单按钮
-            />
-          )}
+          {(() => {
+            // Direct S3 MP4 (per your request)
+            const mp4Raw =
+              movie.videoUrl ||
+              (playData?.sources || []).find(
+                (s: any) => (s.type || "").toLowerCase() === "mp4"
+              )?.url;
+            if (!mp4Raw) return null;
+            return (
+              <div
+                className="movie-player"
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  height: 0,
+                  paddingBottom: "56.25%",
+                }}
+              >
+                <video
+                  src={mp4Raw}
+                  controls
+                  controlsList="nodownload noremoteplayback"
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    background: "#000",
+                  }}
+                  onTimeUpdate={(e) => {
+                    const target = e.currentTarget as HTMLVideoElement;
+                    lastPosRef.current = target.currentTime || 0;
+                  }}
+                />
+              </div>
+            );
+          })()}
         </section>
 
         {/* Sponsor Section */}
         <section className="sponsor-section">
           <div className="sponsor-grid">
-            <img 
-              src="https://ezmovie.me/build/web/ez-movie/img/banner-register-ez-casino.png?v=1" 
-              alt="EZ Casino Banner" 
+            <img
+              src="https://ezmovie.me/build/web/ez-movie/img/banner-register-ez-casino.png?v=1"
+              alt="EZ Casino Banner"
               className="sponsor-logo"
             />
-            <img 
-              src="https://ezmovie.me/build/web/ez-movie/img/banner-register-ez-slot.png?v=1" 
-              alt="EZ Slot Banner" 
+            <img
+              src="https://ezmovie.me/build/web/ez-movie/img/banner-register-ez-slot.png?v=1"
+              alt="EZ Slot Banner"
               className="sponsor-logo"
             />
-            <img 
-              src="https://ezmovie.me/build/web/ez-movie/img/banner-register-ez-lotto.png?v=1" 
-              alt="EZ Lotto Banner" 
+            <img
+              src="https://ezmovie.me/build/web/ez-movie/img/banner-register-ez-lotto.png?v=1"
+              alt="EZ Lotto Banner"
               className="sponsor-logo"
             />
           </div>
         </section>
 
-        {/* Movie Info Section - 移动自原标签页 */}
+        {/* Movie Info Section */}
         <section className="movie-info-section">
-          <h3 className="movie-info-title">ข้อมูลหนัง</h3>
           <div className="movie-info-grid">
             <div>
-              <img src={movie.poster} alt={movie.title} className="movie-poster" />
+              <img
+                src={movie.poster}
+                alt={movie.title}
+                className="movie-poster"
+              />
             </div>
-            
+
             <div className="movie-details">
               <h1>{movie.title}</h1>
               <div className="movie-meta">
@@ -1413,15 +1712,30 @@ const MoviePlayer: React.FC = () => {
                 <span>•</span>
                 <span>{movie.duration}</span>
                 <span>•</span>
-                <div className="movie-rating">
-                  ⭐ {movie.rating}
-                </div>
+                <div className="movie-rating">IMDb {movie.rating}</div>
               </div>
 
               <div className="movie-genres">
                 {movie.genre.map((genre, index) => (
-                  <span key={index} className="movie-genre">
+                  <span
+                    key={index}
+                    className="movie-genre"
+                    onClick={() =>
+                      navigate(`/genre/${encodeURIComponent(genre)}`)
+                    }
+                    style={{ cursor: "pointer" }}
+                  >
                     {genre}
+                  </span>
+                ))}
+                {tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="movie-genre"
+                    onClick={() => navigate(`/tag/${tag.id}`)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {tag.name}
                   </span>
                 ))}
               </div>
@@ -1429,41 +1743,63 @@ const MoviePlayer: React.FC = () => {
               <p className="movie-description">{movie.description}</p>
 
               <div className="movie-cast">
-                <strong>นักแสดง :</strong>
-                <div className="cast-names">
-                  {movie.cast.map((actor, index) => actor.name).join(', ')}
+                <strong>Cast:</strong>
+                <div
+                  className="cast-names"
+                  style={{ display: "flex", flexWrap: "wrap", gap: 8 }}
+                >
+                  {(castList.length > 0
+                    ? castList
+                    : (movie.cast.map((c: any) => ({ name: c.name })) as any[])
+                  ).map((c: any, i: number) => (
+                    <span
+                      key={c.id || `${c.name}-${i}`}
+                      className="movie-genre"
+                      onClick={() => c.id && navigate(`/cast/${c.id}`)}
+                      style={{ cursor: c.id ? "pointer" : "default" }}
+                    >
+                      {c.name}
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <strong>ผู้กำกับ:</strong> {movie.director}<br />
-                <strong>สตูดิโอ:</strong> {movie.studio}
-              </div>
+              {movie.director && (
+                <div>
+                  <strong>Director:</strong> {movie.director}
+                </div>
+              )}
             </div>
           </div>
         </section>
 
         {/* Related Movies */}
         <section className="related-movies">
-          <h3>หนังที่เกี่ยวข้อง</h3>
+          <h3>Related Movies</h3>
           <div className="related-grid">
-            {relatedMovies.map((relatedMovie) => (
-              <div 
-                key={relatedMovie.id} 
-                className="related-card"
-                onClick={() => navigate(`/movie/${relatedMovie.id}`)}
-              >
-                <img 
-                  src={relatedMovie.poster} 
-                  alt={relatedMovie.title} 
-                  className="related-poster"
-                  loading="lazy"
-                />
-                <div className="related-overlay">
-                  <div className="related-title">{relatedMovie.title}</div>
+            {(related.length > 0 ? related : relatedMovies).map(
+              (relatedMovie) => (
+                <div
+                  key={relatedMovie.id}
+                  className="related-card"
+                  onClick={() => navigate(`/movie/${relatedMovie.id}`)}
+                >
+                  <img
+                    src={
+                      (relatedMovie as any).poster ||
+                      (relatedMovie as any).logo ||
+                      ""
+                    }
+                    alt={relatedMovie.title}
+                    className="related-poster"
+                    loading="lazy"
+                  />
+                  <div className="related-overlay">
+                    <div className="related-title">{relatedMovie.title}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </section>
       </main>
@@ -1471,154 +1807,6 @@ const MoviePlayer: React.FC = () => {
       {/* Footer - 使用网站统一Footer */}
       <SiteFooter />
     </div>
-  );
-};
-
-// SiteHeader Component - 复制自首页
-const SiteHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
-  const navItems = [
-    'หน้าหลัก',
-    'หนังใหม่',
-    'ซีรีส์',
-    'อนิเมะ',
-    'ประเภทหนัง',
-    'คลิปวิดีโอ',
-    'นักแสดง',
-  ];
-
-  return (
-    <header className="ezm-header">
-      <div className="ezm-container">
-        <div className="ezm-headerInner">
-          {/* 左侧：汉堡 + LOGO（图片） */}
-          <div className="ezm-brandGroup">
-            <button 
-              className="ezm-hamburger"
-              onClick={onMenuClick}
-              aria-label="打开菜单"
-            >
-              <svg viewBox="0 0 32 32">
-                <path
-                  d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"
-                  className="ezm-line ezm-line-top-bottom"
-                ></path>
-                <path d="M7 16 27 16" className="ezm-line"></path>
-              </svg>
-            </button>
-            <a href="/" className="ezm-navbar-brand" aria-label="EZ Movie">
-              <img className="ezm-logoImg" src="/images/logos/ez-movie-logo-clean.svg" alt="EZ Movie" />
-            </a>
-          </div>
-
-          {/* 中间：主导航 */}
-          <nav className="ezm-nav">
-            {navItems.map((item, i) => (
-              <a key={item} className={`ezm-navItem ${i===0 ? 'is-active' : ''}`} href="#">{item}</a>
-            ))}
-          </nav>
-
-          {/* 右侧：LINE + 赞助 LOGO + 搜索 */}
-          <div className="ezm-headerActions">
-            {/* LINE（移动端替换为站点图片地址） */}
-            <a href="#" className="ezm-lineIcon ezm-animatedBtn" title="LINE">
-              <img src="https://ezmovie.me/media/cache/strip/202310/block/88b1c84ceef85a444e84dc0af24b0e82.png" alt="LINE" className="ezm-lineImg" />
-            </a>
-
-            {/* 分隔线 */}
-            <div className="ezm-separator"></div>
-            
-            {/* 赞助 LOGO（桌面显示） */}
-            <div className="ezm-sponsorBar ezm-show-lg">
-              <a className="ezm-sponsorLogo ezm-animatedBtn" href="#"><img src="https://ezmovie.me/build/web/ez-movie/img/sponsor-logo-casino.png?v=2?v=1" alt="Casino" /></a>
-              <a className="ezm-sponsorLogo ezm-animatedBtn" href="#"><img src="https://ezmovie.me/build/web/ez-movie/img/sponsor-logo-slot.png?v=1" alt="Slot" /></a>
-              <a className="ezm-sponsorLogo ezm-animatedBtn" href="#"><img src="https://ezmovie.me/build/web/ez-movie/img/sponsor-logo-lotto.png?v=1" alt="Lotto" /></a>
-            </div>
-
-            {/* 搜索按钮 */}
-            <button className="ezm-searchBtn ezm-animatedBtn" aria-label="search">
-              <IconSearch className="ezm-btnIcon" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-};
-
-// SiteFooter Component - 复制自首页
-const SiteFooter = () => {
-  const footerCategories = [
-    'ดูหนัง',
-    'ดูหนังออนไลน์',
-    'ดูหนังฟรี',
-    'ดูหนัง2025',
-    'ดูซีรี่',
-    'ซีรี่',
-    'ดูอนิเมะ',
-    'อนิเมะ',
-    'พากย์ไทย',
-    'ซับไทย',
-    'เต็มเรื่อง',
-    'Netflix'
-  ];
-
-  return (
-    <footer className="site-footer">
-      <div className="footer-container">
-        {/* Top Section - Logo and Sponsors */}
-        <div className="footer-top">
-          <div className="footer-brand">
-            <img 
-              src="/images/logos/ez-movie-logo-clean.svg" 
-              alt="EZ Movie" 
-              className="footer-logo"
-            />
-          </div>
-          
-          <div className="footer-sponsors">
-            <img 
-              src="https://ezmovie.me/build/web/ez-movie/img/sponsor-logo-casino.png?v=2?v=1" 
-              alt="EZ Casino" 
-              className="sponsor-logo"
-            />
-            <img 
-              src="https://ezmovie.me/build/web/ez-movie/img/sponsor-logo-slot.png?v=1" 
-              alt="EZ Slot" 
-              className="sponsor-logo"
-            />
-            <img 
-              src="https://ezmovie.me/build/web/ez-movie/img/sponsor-logo-lotto.png?v=1" 
-              alt="EZ Lotto" 
-              className="sponsor-logo"
-            />
-          </div>
-        </div>
-
-        {/* Navigation Links */}
-        <div className="footer-nav">
-          {footerCategories.map((category, index) => (
-            <a key={index} href="#" className="footer-nav-link">
-              {category}
-            </a>
-          ))}
-        </div>
-
-        {/* Bottom Section - Legal and Copyright */}
-        <div className="footer-bottom">
-          <div className="footer-links">
-            <a href="#" className="footer-link">ประกาศหนังที่สนหา</a>
-            <span className="divider">|</span>
-            <a href="#" className="footer-link">Term and Condition</a>
-            <span className="divider">|</span>
-            <a href="#" className="footer-link">ขอหนังฟรี</a>
-          </div>
-          
-          <div className="footer-copyright">
-            EZ Movie ดูหนังฟรี ไม่มีโฆษณา, Copyright 2023 All Right Reserved
-          </div>
-        </div>
-      </div>
-    </footer>
   );
 };
 

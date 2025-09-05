@@ -9,11 +9,10 @@ interface ListItem {
   year?: number;
   poster: string | null;
   logo?: string | null;
-  casts?: Array<{ id?: string; name?: string }>;
 }
 
-const CastPage: React.FC = () => {
-  const { castId } = useParams();
+const TagPage: React.FC = () => {
+  const { tagId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<ListItem[]>([]);
   const [page, setPage] = useState<number>(
@@ -22,8 +21,7 @@ const CastPage: React.FC = () => {
   const [limit] = useState<number>(24);
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
-  const [castName, setCastName] = useState<string>("");
-  const [castImage, setCastImage] = useState<string | null>(null);
+  const [tagName, setTagName] = useState<string>("");
   const navigate = useNavigate();
 
   const API_BASE = `${
@@ -31,13 +29,13 @@ const CastPage: React.FC = () => {
   }/v1`;
 
   useEffect(() => {
-    if (!castId) return;
+    if (!tagId) return;
     (async () => {
       try {
         setLoading(true);
         const resp = await fetch(
-          `${API_BASE}/movies?page=${page}&limit=${limit}&castId=${encodeURIComponent(
-            castId
+          `${API_BASE}/movies?page=${page}&limit=${limit}&tagId=${encodeURIComponent(
+            tagId
           )}`
         );
         if (!resp.ok) return;
@@ -48,61 +46,29 @@ const CastPage: React.FC = () => {
           year: m.year,
           poster: m.poster || null,
           logo: m.logo || null,
-          casts: m.casts || [],
         }));
         setItems(mapped);
         setTotal(data.total || 0);
-
-        // Derive cast name from first item's casts list
-        const nameFromItems = mapped
-          .flatMap((it) => it.casts || [])
-          .find((c: any) => c?.id === castId)?.name;
-        if (nameFromItems) setCastName(nameFromItems);
-
-        // If your API later exposes avatar, set castImage here; fallback stays null
-        setCastImage(null);
+        // derive tag name if server returns it inside items.tags
+        const first = (data.items || [])[0];
+        const nameFromItem = Array.isArray(first?.tags)
+          ? first.tags.find((t: any) => t?.id === tagId)?.name ||
+            first.tags[0]?.name
+          : undefined;
+        if (nameFromItem) setTagName(nameFromItem);
       } catch (_) {
       } finally {
         setLoading(false);
       }
     })();
-  }, [castId, page]);
+  }, [tagId, page]);
 
   const hasMore = page * limit < total;
-
-  const PlaceholderAvatar = () => (
-    <div
-      className="cast-avatar placeholder-avatar"
-      style={{
-        borderRadius: "50%",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        border: "1px solid rgba(255,255,255,0.12)",
-      }}
-    >
-      <svg
-        width="96"
-        height="96"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ opacity: 0.6 }}
-      >
-        <path
-          d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-3.866 0-7 3.134-7 7h2c0-2.761 2.239-5 5-5s5 2.239 5 5h2c0-3.866-3.134-7-7-7z"
-          fill="#e5eaf1"
-        />
-      </svg>
-    </div>
-  );
 
   return (
     <>
       <SiteHeader />
-      {/* Scoped styles for cast cards: hover overlay on desktop, always visible on mobile */}
+      {/* Scoped styles copied from CastPage for consistent UI */}
       <style>
         {`
         .cast-card .related-poster { transform: none !important; transition: none !important; }
@@ -113,43 +79,10 @@ const CastPage: React.FC = () => {
         }
         /* Mobile: force 3 columns per row */
         @media (max-width: 640px) {
-          .cast-grid {
-            display: grid !important;
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 12px !important;
-          }
+          .cast-grid { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 12px !important; }
         }
-        /* Avatar (image or placeholder) */
-        .cast-avatar {
-          width: 220px;
-          height: 220px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 1px solid rgba(255,255,255,0.12);
-        }
-        /* Cast name/title */
-        .cast-name {
-          color: #fff;
-          margin-bottom: 8px;
-          font-size: 28px;
-          font-weight: 700;
-        }
-        /* Overlay movie title */
-        .cast-title {
-          color: #fff;
-          font-weight: 700;
-          font-size: 20px;
-          text-align: center;
-          padding: 12px 10px;
-          width: 100%;
-        }
-        /* Mobile tweaks */
-        @media (max-width: 640px) {
-          .cast-avatar { width: 140px; height: 140px; }
-          .cast-name { font-size: 18px; }
-          .cast-title { font-size: 14px; padding: 8px 6px; }
-          .placeholder-avatar svg { width: 56px; height: 56px; }
-        }
+        .cast-title { color:#fff; font-weight:700; font-size:20px; text-align:center; padding:12px 10px; width:100%; }
+        @media (max-width: 640px) { .cast-title { font-size:14px; padding:8px 6px; } }
         `}
       </style>
       <div
@@ -162,19 +95,9 @@ const CastPage: React.FC = () => {
           paddingRight: 10,
         }}
       >
-        {/* Header */}
-        <div
-          style={{
-            margin: "12px 0 24px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <h1 className="cast-name">
-            {castName || "Cast"}
+        <div style={{ margin: "12px 0 24px", textAlign: "center" }}>
+          <h1 style={{ color: "#fff", marginBottom: 8 }}>
+            {tagName || "Tag"}
             {total ? (
               <span style={{ color: "#9aa4b2", fontSize: 16 }}>
                 {" "}
@@ -182,20 +105,8 @@ const CastPage: React.FC = () => {
               </span>
             ) : null}
           </h1>
-          <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-            {castImage ? (
-              <img
-                src={castImage}
-                alt={castName || "Cast"}
-                className="cast-avatar"
-              />
-            ) : (
-              <PlaceholderAvatar />
-            )}
-          </div>
         </div>
 
-        {/* Movies grid */}
         {loading ? (
           <div style={{ color: "#9aa4b2" }}>Loading…</div>
         ) : (
@@ -233,7 +144,6 @@ const CastPage: React.FC = () => {
                   }}
                   loading="lazy"
                 />
-                {/* Hover-only (desktop) / default (mobile) black overlay with centered bold title */}
                 <div
                   className="cast-overlay"
                   style={{
@@ -252,7 +162,7 @@ const CastPage: React.FC = () => {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Styled pagination like CastPage */}
         <div
           style={{ marginTop: 28, display: "flex", justifyContent: "center" }}
         >
@@ -296,7 +206,6 @@ const CastPage: React.FC = () => {
 
             return (
               <div style={{ display: "flex", alignItems: "center" }}>
-                {/* First page shortcut (optional) */}
                 {items.map((it, idx) =>
                   it === "…" ? (
                     <div
@@ -315,12 +224,11 @@ const CastPage: React.FC = () => {
                     </div>
                   )
                 )}
-                {/* Next */}
                 {totalPages > 1 && page < totalPages && (
                   <div
                     style={boxStyle(false)}
                     onClick={() => go(page + 1)}
-                    aria-disabled={!hasMore}
+                    aria-disabled={!(page < totalPages)}
                   >
                     {">"}
                   </div>
@@ -335,4 +243,4 @@ const CastPage: React.FC = () => {
   );
 };
 
-export default CastPage;
+export default TagPage;

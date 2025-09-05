@@ -30,6 +30,7 @@ import MovieCatalog from "./components/catalog/MovieCatalog";
 import MovieDetail from "./components/movie/MovieDetail";
 import APIIntegrationDemo from "./components/demo/APIIntegrationDemo";
 import CastPage from "./components/catalog/CastPage.tsx";
+import TagPage from "./components/catalog/TagPage.tsx";
 
 // 创建QueryClient实例
 const queryClient = new QueryClient({
@@ -65,6 +66,7 @@ const App = () => {
         <Route path="/catalog/:genre" element={<MovieCatalog />} />
         <Route path="/movie-detail/:movieId" element={<MovieDetail />} />
         <Route path="/cast/:castId" element={<CastPage />} />
+        <Route path="/tag/:tagId" element={<TagPage />} />
         <Route path="/demo" element={<APIIntegrationDemo />} />
       </Routes>
     </BrowserRouter>
