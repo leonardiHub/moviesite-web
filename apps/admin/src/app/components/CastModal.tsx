@@ -153,13 +153,13 @@ export default function CastModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-8 max-w-2xl w-11/12 shadow-2xl rounded-2xl bg-white">
+      <div className="relative top-10 mx-auto p-8 max-w-2xl w-11/12 shadow-2xl rounded-2xl bg-white dark:bg-gray-800 dark:text-gray-100">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {mode === "create" ? "Add New Cast Member" : "Edit Cast Member"}
             </h3>
-            <p className="text-gray-500 mt-1">
+            <p className="text-gray-500 dark:text-gray-300 mt-1">
               {mode === "create"
                 ? "Create a new cast member entry"
                 : "Update cast member information"}
@@ -167,7 +167,7 @@ export default function CastModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
@@ -176,7 +176,7 @@ export default function CastModal({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Cast Member Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Cast Member Name *
             </label>
             <input
@@ -184,21 +184,23 @@ export default function CastModal({
               required
               value={formData.castName}
               onChange={(e) => handleInputChange("castName", e.target.value)}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100 ${
                 errors.castName
                   ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300"
+                  : "border-gray-300 dark:border-gray-700"
               }`}
               placeholder="Enter cast member name (e.g., Tom Hanks, Meryl Streep)"
             />
             {errors.castName && (
-              <p className="mt-1 text-sm text-red-600">{errors.castName}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                {errors.castName}
+              </p>
             )}
           </div>
 
           {/* Cast Member Image */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Cast Member Image
             </h4>
             <div className="flex items-center gap-6">
@@ -208,12 +210,12 @@ export default function CastModal({
                   <img
                     src={imagePreview}
                     alt="Cast image preview"
-                    className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200"
+                    className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
                   />
                   <button
                     type="button"
                     onClick={removeImage}
-                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
                   >
                     Remove
                   </button>
@@ -233,15 +235,15 @@ export default function CastModal({
                 />
                 <label
                   htmlFor="cast-image-upload"
-                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700/30 transition-all"
                 >
-                  <PhotoIcon className="w-5 h-5 text-gray-500" />
-                  <span className="font-medium text-gray-700">
+                  <PhotoIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
                     {imagePreview ? "Change Image" : "Upload Image"}
                   </span>
                 </label>
                 {!imagePreview && (
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     Recommended: 300x300px, JPG/PNG
                   </p>
                 )}
@@ -251,7 +253,7 @@ export default function CastModal({
 
           {/* Cast Member Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
             </label>
             <textarea
@@ -260,35 +262,35 @@ export default function CastModal({
                 handleInputChange("castDescription", e.target.value)
               }
               rows={4}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100 ${
                 errors.castDescription
                   ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300"
+                  : "border-gray-300 dark:border-gray-700"
               }`}
               placeholder="Enter a brief description or bio for the cast member..."
             />
             {errors.castDescription && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {errors.castDescription}
               </p>
             )}
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Optional: Brief description or bio (max 500 characters)
             </p>
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+          <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="px-6 py-3 bg-[#fe6a3c] text-white rounded-lg hover:bg-[#fe6a3c]/90 transition-colors font-medium"
             >
               {mode === "create" ? "Create Cast Member" : "Update Cast Member"}
             </button>

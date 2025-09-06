@@ -151,18 +151,18 @@ export default function CountryModal({
         />
 
         {/* Modal */}
-        <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl">
+        <div className="relative w-full max-w-2xl bg-white dark:bg-gray-800 dark:text-gray-100 rounded-2xl shadow-xl">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#fe6a3c] rounded-xl flex items-center justify-center">
                 <GlobeAltIcon className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   {mode === "create" ? "Add New Country" : "Edit Country"}
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   {mode === "create"
                     ? "Create a new country entry"
                     : `Editing ${country?.name}`}
@@ -171,7 +171,7 @@ export default function CountryModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
@@ -181,14 +181,14 @@ export default function CountryModal({
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Basic Information
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Country Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Country Name *
                   </label>
                   <input
@@ -196,21 +196,23 @@ export default function CountryModal({
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100 ${
                       errors.name
                         ? "border-red-300 focus:ring-red-500"
-                        : "border-gray-300"
+                        : "border-gray-300 dark:border-gray-700"
                     }`}
                     placeholder="e.g., United States"
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.name}
+                    </p>
                   )}
                 </div>
 
                 {/* Country Code */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     ISO Code *
                   </label>
                   <input
@@ -219,42 +221,38 @@ export default function CountryModal({
                     value={formData.code}
                     onChange={handleCodeChange}
                     maxLength={2}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100 ${
                       errors.code
                         ? "border-red-300 focus:ring-red-500"
-                        : "border-gray-300"
+                        : "border-gray-300 dark:border-gray-700"
                     }`}
                     placeholder="e.g., US"
                   />
                   {errors.code && (
-                    <p className="mt-1 text-sm text-red-600">{errors.code}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.code}
+                    </p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     ISO 3166-1 alpha-2 code (2 letters)
                   </p>
                 </div>
               </div>
-
-
             </div>
 
-
-
-
-
             {/* Action Buttons */}
-            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
+                className="px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center space-x-2"
+                className="px-6 py-3 bg-[#fe6a3c] text-white rounded-xl hover:bg-[#fe6a3c]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center space-x-2"
               >
                 {isSubmitting ? (
                   <>

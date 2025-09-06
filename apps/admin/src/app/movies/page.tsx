@@ -183,7 +183,7 @@ export default function MoviesPage() {
 
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: "20",
+        limit: "5",
         ...(searchTerm && { search: searchTerm }),
         ...(statusFilter && { status: statusFilter }),
         ...(yearFilter && { year: yearFilter }),
@@ -519,46 +519,27 @@ export default function MoviesPage() {
 
   if (loading && movies.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading movies...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">
+            Loading movies...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with gradient background */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Movie Management</h1>
-              <p className="text-blue-100 text-lg">
-                Manage your movie catalog with ease
-              </p>
-            </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-white text-blue-600 px-6 py-3 rounded-xl hover:bg-blue-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              <PlusIcon className="w-6 h-6" />
-              <span className="font-semibold">Add Movie</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Error Display with better styling */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg shadow-sm">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 dark:border-red-500 rounded-r-lg shadow-sm">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-5 w-5 text-red-400"
+                  className="h-5 w-5 text-red-400 dark:text-red-300"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -570,17 +551,19 @@ export default function MoviesPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  {error}
+                </p>
               </div>
             </div>
           </div>
         )}
 
         {/* Enhanced Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <FunnelIcon className="w-5 h-5 text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-900">
+            <FunnelIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Search & Filters
             </h2>
           </div>
@@ -589,30 +572,30 @@ export default function MoviesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search Input */}
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Search Movies
                 </label>
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-400" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by title, director..."
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
               </div>
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Status
                 </label>
                 <select
                   value={statusFilter}
                   onChange={(e) => handleStatusFilterChange(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="">All Statuses</option>
                   <option value="draft">Draft</option>
@@ -623,7 +606,7 @@ export default function MoviesPage() {
 
               {/* Year Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Year
                 </label>
                 <input
@@ -633,7 +616,7 @@ export default function MoviesPage() {
                   placeholder="Year"
                   min="1900"
                   max={new Date().getFullYear() + 5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100"
                 />
               </div>
 
@@ -641,14 +624,14 @@ export default function MoviesPage() {
               <div className="flex items-end gap-2">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                  className="flex-1 bg-[#fe6a3c] text-white px-6 py-3 rounded-xl hover:bg-[#fe6a3c]/90 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
                 >
                   Search
                 </button>
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200"
+                  className="px-4 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200"
                   title="Clear all filters"
                 >
                   <XMarkIcon className="w-5 h-5" />
@@ -656,13 +639,13 @@ export default function MoviesPage() {
               </div>
               {/* Genres */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Genres
                 </label>
                 <select
                   value={selectedGenreId}
                   onChange={(e) => setSelectedGenreId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="">All genres</option>
                   {availableGenres.map((g) => (
@@ -674,13 +657,13 @@ export default function MoviesPage() {
               </div>
               {/* Tags */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Tags
                 </label>
                 <select
                   value={selectedTagId}
                   onChange={(e) => setSelectedTagId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="">All tags</option>
                   {availableTags.map((t) => (
@@ -692,13 +675,13 @@ export default function MoviesPage() {
               </div>
               {/* Countries */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Countries
                 </label>
                 <select
                   value={selectedCountryId}
                   onChange={(e) => setSelectedCountryId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="">All countries</option>
                   {availableCountries.map((c) => (
@@ -710,13 +693,13 @@ export default function MoviesPage() {
               </div>
               {/* Cast */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Cast
                 </label>
                 <select
                   value={selectedCastId}
                   onChange={(e) => setSelectedCastId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="">All cast</option>
                   {availableCast.map((c) => (
@@ -730,131 +713,36 @@ export default function MoviesPage() {
           </form>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg
-                  className="w-6 h-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2"
-                  />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Movies
-                </p>
-                <p className="text-2xl font-bold text-gray-900">{total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Published</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {movies.filter((m) => m.status === "published").length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <svg
-                  className="w-6 h-6 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Draft</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {movies.filter((m) => m.status === "draft").length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <svg
-                  className="w-6 h-6 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Archived</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {movies.filter((m) => m.status === "archived").length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Enhanced Movies Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Movie Catalog
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Showing {movies.length} of {total} movies
-            </p>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Movie Catalog
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  Showing {movies.length} of {total} movies
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-[#fe6a3c] text-white px-4 py-2 rounded-lg hover:bg-[#fe6a3c]/90 transition-all duration-200 flex items-center gap-2 shadow-sm"
+                title="Add Movie"
+              >
+                <PlusIcon className="w-5 h-5" />
+                <span className="font-medium">Add Movie</span>
+              </button>
+            </div>
           </div>
 
           {movies.length === 0 && !loading ? (
             <div className="text-center py-12">
               <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
+              <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                 No movies found
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {searchTerm || statusFilter || yearFilter
                   ? "Try adjusting your search criteria or filters."
                   : "Get started by creating your first movie."}
@@ -863,7 +751,7 @@ export default function MoviesPage() {
                 <div className="mt-6">
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#fe6a3c] hover:bg-[#fe6a3c]/90"
                   >
                     <PlusIcon className="w-4 h-4 mr-2" />
                     Add Movie
@@ -873,52 +761,52 @@ export default function MoviesPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-900/30">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Poster
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Movie Details
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Year
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Rating
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Genres
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Updated
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
                   {movies.map((movie) => (
                     <tr
                       key={movie.id}
-                      className="hover:bg-gray-50 transition-colors duration-150"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getPosterDisplay(movie)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="max-w-xs">
-                          <div className="text-sm font-semibold text-gray-900 truncate">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                             {movie.title}
                           </div>
                           {movie.originalTitle &&
                             movie.originalTitle !== movie.title && (
-                              <div className="text-sm text-gray-500 truncate">
+                              <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                                 {movie.originalTitle}
                               </div>
                             )}
@@ -944,7 +832,7 @@ export default function MoviesPage() {
                                   className={`w-4 h-4 ${
                                     i < Math.floor(movie.rating! / 2)
                                       ? "text-yellow-400 fill-current"
-                                      : "text-gray-300"
+                                      : "text-gray-300 dark:text-gray-600"
                                   }`}
                                   viewBox="0 0 20 20"
                                 >
@@ -952,7 +840,7 @@ export default function MoviesPage() {
                                 </svg>
                               ))}
                             </div>
-                            <span className="ml-2 text-sm text-gray-600">
+                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">
                               {movie.rating}/10
                             </span>
                           </div>
@@ -981,19 +869,19 @@ export default function MoviesPage() {
                           {movie.genres.slice(0, 2).map((genre) => (
                             <span
                               key={genre.genreId}
-                              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800"
+                              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
                             >
                               {genre.genre.name}
                             </span>
                           ))}
                           {movie.genres.length > 2 && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                               +{movie.genres.length - 2}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {formatDate(movie.updatedAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -1003,7 +891,7 @@ export default function MoviesPage() {
                               setSelectedMovie(movie);
                               setIsEditModalOpen(true);
                             }}
-                            className="text-indigo-600 hover:text-indigo-900 p-2 rounded-lg hover:bg-indigo-50 transition-colors duration-150"
+                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 p-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-150"
                             title="Edit movie"
                           >
                             <PencilIcon className="w-5 h-5" />
@@ -1013,7 +901,7 @@ export default function MoviesPage() {
                               setMovieToDelete(movie);
                               setIsDeleteModalOpen(true);
                             }}
-                            className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors duration-150"
+                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150"
                             title="Delete movie"
                           >
                             <TrashIcon className="w-5 h-5" />
@@ -1029,27 +917,27 @@ export default function MoviesPage() {
         </div>
 
         {/* Enhanced Pagination - Always show pagination info */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 mt-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 px-6 py-4 mt-6">
           <div className="flex items-center justify-between">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
               >
                 Previous
               </button>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   Showing{" "}
                   <span className="font-medium">
                     {total > 0 ? (currentPage - 1) * 20 + 1 : 0}
@@ -1060,7 +948,7 @@ export default function MoviesPage() {
                   </span>{" "}
                   of <span className="font-medium">{total}</span> results
                   {totalPages === 1 && total > 0 && (
-                    <span className="text-gray-500 ml-2">
+                    <span className="text-gray-500 dark:text-gray-400 ml-2">
                       (All results on this page)
                     </span>
                   )}
@@ -1072,7 +960,7 @@ export default function MoviesPage() {
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+                      className="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
                     >
                       <ChevronLeftIcon className="h-5 w-5" />
                     </button>
@@ -1083,8 +971,8 @@ export default function MoviesPage() {
                           onClick={() => handlePageChange(page)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-all duration-150 ${
                             page === currentPage
-                              ? "z-10 bg-blue-50 border-blue-500 text-blue-600 shadow-sm"
-                              : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                              ? "z-10 bg-[#fe6a3c]/10 dark:bg-[#fe6a3c]/20 border-[#fe6a3c] text-[#fe6a3c] shadow-sm"
+                              : "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                           }`}
                         >
                           {page}
@@ -1094,13 +982,13 @@ export default function MoviesPage() {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
+                      className="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
                     >
                       <ChevronRightIcon className="h-5 w-5" />
                     </button>
                   </nav>
                 ) : (
-                  <div className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30 px-3 py-2 rounded-lg">
                     Page {currentPage} of {totalPages}
                   </div>
                 )}

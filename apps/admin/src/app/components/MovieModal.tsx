@@ -695,13 +695,13 @@ export default function MovieModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-8 max-w-4xl w-11/12 shadow-2xl rounded-2xl bg-white">
+      <div className="relative top-10 mx-auto p-8 max-w-4xl w-11/12 shadow-2xl rounded-2xl bg-white dark:bg-gray-800 dark:text-gray-100">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {mode === "create" ? "Add New Movie" : "Edit Movie"}
             </h3>
-            <p className="text-gray-500 mt-1">
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
               {mode === "create"
                 ? "Create a new movie entry"
                 : "Update movie information"}
@@ -709,7 +709,7 @@ export default function MovieModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
@@ -717,13 +717,13 @@ export default function MovieModal({
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Basic Information
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Title *
                 </label>
                 <input
@@ -731,13 +731,13 @@ export default function MovieModal({
                   required
                   value={formData.title}
                   onChange={(e) => handleInputChange("title", e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="Enter movie title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Year
                 </label>
                 <input
@@ -751,13 +751,13 @@ export default function MovieModal({
                       e.target.value ? parseInt(e.target.value) : undefined
                     )
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100"
                   placeholder="2024"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Runtime (minutes)
                 </label>
                 <input
@@ -770,13 +770,13 @@ export default function MovieModal({
                       e.target.value ? parseInt(e.target.value) : undefined
                     )
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100"
                   placeholder="120"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Age Rating
                 </label>
                 <select
@@ -784,7 +784,7 @@ export default function MovieModal({
                   onChange={(e) =>
                     handleInputChange("ageRating", e.target.value)
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select age rating</option>
                   {availableAgeRatings.map((rating) => (
@@ -796,7 +796,7 @@ export default function MovieModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Rating (0-10)
                 </label>
                 <input
@@ -811,13 +811,13 @@ export default function MovieModal({
                       e.target.value ? parseFloat(e.target.value) : undefined
                     )
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100"
                   placeholder="8.5"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Director
                 </label>
                 <input
@@ -826,13 +826,13 @@ export default function MovieModal({
                   onChange={(e) =>
                     handleInputChange("director", e.target.value)
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100"
                   placeholder="Director name"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Status
                 </label>
                 <select
@@ -843,7 +843,7 @@ export default function MovieModal({
                       e.target.value as "draft" | "published" | "archived"
                     )
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -854,22 +854,22 @@ export default function MovieModal({
           </div>
 
           {/* Synopsis */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Synopsis
             </h4>
             <textarea
               rows={4}
               value={formData.synopsis}
               onChange={(e) => handleInputChange("synopsis", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none dark:bg-gray-900 dark:text-gray-100"
               placeholder="Enter a brief description of the movie..."
             />
           </div>
 
           {/* Poster Upload */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Movie Poster
             </h4>
             <div className="flex items-center gap-6">
@@ -902,15 +902,15 @@ export default function MovieModal({
                 />
                 <label
                   htmlFor="poster-upload"
-                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700/30 transition-all"
                 >
-                  <PhotoIcon className="w-5 h-5 text-gray-500" />
-                  <span className="font-medium text-gray-700">
+                  <PhotoIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
                     {posterPreview ? "Change Poster" : "Upload Poster"}
                   </span>
                 </label>
                 {!posterPreview && (
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     Recommended: 300x450px, JPG/PNG
                   </p>
                 )}
@@ -919,8 +919,8 @@ export default function MovieModal({
           </div>
 
           {/* Logo Upload (Optional) */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Movie Logo (optional)
             </h4>
             <div className="flex items-center gap-6">
@@ -951,22 +951,22 @@ export default function MovieModal({
                 />
                 <label
                   htmlFor="logo-upload"
-                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700/30 transition-all"
                 >
-                  <PhotoIcon className="w-5 h-5 text-gray-500" />
-                  <span className="font-medium text-gray-700">
+                  <PhotoIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
                     {logoPreview ? "Change Logo" : "Upload Logo"}
                   </span>
                 </label>
                 {!logoPreview && (
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     Recommended: transparent PNG/SVG
                   </p>
                 )}
               </div>
             </div>
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Logo URL (optional)
               </label>
               <input
@@ -976,9 +976,9 @@ export default function MovieModal({
                   setFormData((prev) => ({ ...prev, logoUrl: e.target.value }))
                 }
                 placeholder="https://..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                 If provided and no new logo file is uploaded, this URL will be
                 used.
               </p>
@@ -986,8 +986,8 @@ export default function MovieModal({
           </div>
 
           {/* Video Upload */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Movie Video *
             </h4>
             <div className="space-y-4">
@@ -1011,7 +1011,7 @@ export default function MovieModal({
                       <div className="flex items-center gap-4">
                         <video
                           src={videoSrc}
-                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200"
+                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
                           controls
                           muted
                           onLoadStart={() =>
@@ -1064,10 +1064,10 @@ export default function MovieModal({
                   />
                   <label
                     htmlFor="video-upload"
-                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700/30 transition-all"
                   >
                     <svg
-                      className="w-5 h-5 text-gray-500"
+                      className="w-5 h-5 text-gray-500 dark:text-gray-300"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1079,14 +1079,14 @@ export default function MovieModal({
                         d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                       />
                     </svg>
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-gray-700 dark:text-gray-200">
                       {videoPreview || movie?.videoUrl
                         ? "Change Video"
                         : "Upload Video"}
                     </span>
                   </label>
                   {!videoPreview && !movie?.videoUrl && (
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                       Supported formats: MP4, WebM, MOV, AVI{" "}
                       <span className="text-red-500">*Required</span>
                     </p>
@@ -1116,10 +1116,10 @@ export default function MovieModal({
             </div>
 
             {movie && (movie.videoUrl || movie.s3Url) && (
-              <div className="bg-white rounded-lg p-4 mt-4">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 mt-4 border border-gray-200 dark:border-gray-700">
                 {movie.s3Url && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       S3 URL
                     </label>
                     <div className="flex items-center gap-2">
@@ -1127,7 +1127,7 @@ export default function MovieModal({
                         type="text"
                         value={movie.s3Url}
                         readOnly
-                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm font-mono"
+                        className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-mono text-gray-700 dark:text-gray-200"
                       />
                       <button
                         type="button"
@@ -1154,13 +1154,13 @@ export default function MovieModal({
           </div>
 
           {/* Video Information */}
-          <div className="bg-gray-50 rounded-xl p-6">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
             <div className="space-y-4">
               {/* Current Video URLs (Read-only for existing movies) */}
 
               {/* Trailer URL Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   YouTube Trailer URL
                 </label>
                 <input
@@ -1173,9 +1173,9 @@ export default function MovieModal({
                     }))
                   }
                   placeholder="https://www.youtube.com/watch?v=..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 dark:bg-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 />
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   Enter a YouTube URL for the movie trailer
                 </p>
               </div>
@@ -1183,10 +1183,10 @@ export default function MovieModal({
               {/* Trailer Preview */}
               {formData.trailerUrl && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Trailer Preview
                   </label>
-                  <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                     {(() => {
                       const youtubeId = extractYouTubeId(formData.trailerUrl);
                       if (youtubeId) {
@@ -1204,7 +1204,7 @@ export default function MovieModal({
                         );
                       } else {
                         return (
-                          <div className="text-center py-8 text-gray-500">
+                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                             <p>Invalid YouTube URL</p>
                             <p className="text-sm">
                               Please enter a valid YouTube URL
@@ -1220,14 +1220,14 @@ export default function MovieModal({
           </div>
 
           {/* Countries */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Countries
             </h4>
             <div className="grid grid-cols-1 gap-6">
               {/* Countries */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Countries
                 </label>
                 <div className="mb-3">
@@ -1238,7 +1238,7 @@ export default function MovieModal({
                         e.target.value = ""; // Reset selection
                       }
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 dark;border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all dark:bg-gray-900 dark:text-gray-100"
                     disabled={isLoadingCountries}
                   >
                     <option value="">
@@ -1265,7 +1265,7 @@ export default function MovieModal({
                     return (
                       <span
                         key={`country-${countryId}-${idx}`}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-green-100 text-green-800 font-medium"
+                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-green-100 text-green-800 font-medium dark:bg-green-900/30 dark:text-green-300"
                       >
                         {country
                           ? `${country.name} (${country.code})`
@@ -1273,7 +1273,7 @@ export default function MovieModal({
                         <button
                           type="button"
                           onClick={() => removeCountry(countryId)}
-                          className="ml-2 text-green-600 hover:text-green-800 hover:bg-green-200 rounded-full w-4 h-4 flex items-center justify-center"
+                          className="ml-2 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/30 rounded-full w-4 h-4 flex items-center justify-center"
                         >
                           ×
                         </button>
@@ -1286,9 +1286,11 @@ export default function MovieModal({
           </div>
 
           {/* Genres */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Genres</h4>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Genres
+            </h4>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Genres
             </label>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -1300,13 +1302,13 @@ export default function MovieModal({
                   return (
                     <span
                       key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
                     >
                       {genre ? genre.name : `Loading... (${genreId})`}
                       <button
                         type="button"
                         onClick={() => removeGenre(genreId)}
-                        className="ml-2 text-purple-600 hover:text-purple-800"
+                        className="ml-2 text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
                       >
                         ×
                       </button>
@@ -1318,7 +1320,7 @@ export default function MovieModal({
               <select
                 value={newGenre}
                 onChange={(e) => setNewGenre(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
                 disabled={isLoadingGenres}
               >
                 <option value="">
@@ -1345,9 +1347,11 @@ export default function MovieModal({
           </div>
 
           {/* Tags */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Tags</h4>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Tags
+            </h4>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Tags
             </label>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -1359,12 +1363,12 @@ export default function MovieModal({
                   return (
                     <span
                       key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
                     >
                       {tag ? tag.name : `Loading... (${tagId})`}
                       <button
                         onClick={() => removeTag(tagId)}
-                        className="ml-2 text-yellow-600 hover:text-yellow-800"
+                        className="ml-2 text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300"
                       >
                         ×
                       </button>
@@ -1376,7 +1380,7 @@ export default function MovieModal({
               <select
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
                 disabled={isLoadingTags}
               >
                 <option value="">
@@ -1401,9 +1405,11 @@ export default function MovieModal({
           </div>
 
           {/* Cast */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Cast</h4>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Cast
+            </h4>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Cast
             </label>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -1416,7 +1422,7 @@ export default function MovieModal({
                   return (
                     <span
                       key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
                     >
                       {castMember
                         ? castMember.name
@@ -1424,7 +1430,7 @@ export default function MovieModal({
                       <button
                         type="button"
                         onClick={() => removeCastMember(memberId)}
-                        className="ml-2 text-orange-600 hover:text-orange-800"
+                        className="ml-2 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
                       >
                         ×
                       </button>
@@ -1436,7 +1442,7 @@ export default function MovieModal({
               <select
                 value={newCastMember}
                 onChange={(e) => setNewCastMember(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"
                 disabled={isLoadingCast}
               >
                 <option value="">
@@ -1461,11 +1467,11 @@ export default function MovieModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              className="px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
             >
               Cancel
             </button>
