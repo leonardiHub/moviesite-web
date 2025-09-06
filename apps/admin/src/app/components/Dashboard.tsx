@@ -15,6 +15,7 @@ import {
   SunIcon,
 } from "@heroicons/react/24/outline";
 import MoviesPage from "../movies/page";
+import ConfirmModal from "./ConfirmModal";
 import CountriesPage from "../countries/page";
 import GenresPage from "../genres/page";
 import TagsPage from "../tags/page";
@@ -44,6 +45,7 @@ interface DashboardProps {
 export default function Dashboard({ user, onLogout }: DashboardProps) {
   const [activeView, setActiveView] = useState("dashboard");
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
@@ -312,6 +314,14 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 Welcome back, <span className="font-medium">{user.name}</span>
               </div>
+              <button
+                onClick={() => setIsLogoutModalOpen(true)}
+                className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Logout"
+                title="Logout"
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
               {/* {(user.roles.includes("superadmin") ||
                 user.roles.includes("Super Admin")) && (
                 <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-medium">
@@ -330,6 +340,18 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
         <main className="flex-1 p-6">{renderContent()}</main>
       </div>
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        title="Logout"
+        message="Are you sure you want to log out?"
+        onConfirm={() => {
+          setIsLogoutModalOpen(false);
+          onLogout();
+        }}
+        confirmText="Logout"
+      />
     </div>
   );
 }

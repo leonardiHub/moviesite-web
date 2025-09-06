@@ -52,21 +52,25 @@ export default function ConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="mt-3 text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/60 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-2xl bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <div className="mt-1 text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
             <ExclamationTriangleIcon className={`h-6 w-6 ${getIconStyles()}`} />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mt-4">{title}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-4">
+            {title}
+          </h3>
           <div className="mt-2 px-7 py-3">
-            <p className="text-sm text-gray-500">{message}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {message}
+            </p>
           </div>
           <div className="items-center px-4 py-3">
             <div className="flex justify-center space-x-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="px-4 py-2 rounded-xl bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-gray-600"
               >
                 {cancelText}
               </button>
@@ -75,7 +79,7 @@ export default function ConfirmModal({
                   onConfirm();
                   onClose();
                 }}
-                className={`px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${getButtonStyles()}`}
+                className={`px-4 py-2 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 ${getButtonStyles()}`}
               >
                 {confirmText}
               </button>
