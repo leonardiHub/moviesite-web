@@ -24,10 +24,10 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center">
+          <div className="mx-auto h-12 w-12 bg-[#fe6a3c] rounded-2xl flex items-center justify-center shadow">
             <svg
               className="h-8 w-8 text-white"
               fill="none"
@@ -42,15 +42,15 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
               />
             </svg>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-100">
             Admin Panel
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-300">
             Sign in to your admin account
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+        <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-2xl shadow-sm">
             <div>
               <label htmlFor="username" className="sr-only">
                 Username
@@ -61,7 +61,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
                 type="text"
                 autoComplete="username"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-4 py-3 border border-gray-700 placeholder-gray-500 text-gray-100 bg-gray-900 rounded-t-2xl focus:outline-none focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent focus:z-10 sm:text-base"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -77,7 +77,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-4 py-3 border border-gray-700 placeholder-gray-500 text-gray-100 bg-gray-900 rounded-b-2xl focus:outline-none focus:ring-2 focus:ring-[#fe6a3c] focus:border-transparent focus:z-10 sm:text-base"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -89,7 +89,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-5 border border-transparent text-base font-semibold rounded-2xl text-white bg-[#fe6a3c] hover:bg-[#fe6a3c]/90 focus:outline-none focus:ring-2 focus:ring-[#fe6a3c] disabled:opacity-50 disabled:cursor-not-allowed shadow"
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -103,7 +103,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
           </div>
 
           <div className="text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-400">
               Default credentials: admin / admin
             </p>
           </div>
